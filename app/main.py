@@ -11,7 +11,7 @@ from .events import Emit
 
 
 app = FastAPI()
-mongodb_client = MongoClient("demo_04_service_01_mongodb", 27017)
+mongodb_client = MongoClient("granja_service_mongodb", 27017)
 
 emit_events = Emit()
 

@@ -1,30 +1,30 @@
 services:
-  demo_04_service_01:
+  granja_service:
     build: .
     ports:
       - "5001:80"
     volumes:
       - .:/code
     links:
-      - demo_04_service_01_mongodb
-  demo_04_service_events_receiver_01:
+      - granja_service_mongodb
+  granja_service_events_receiver:
     build: .
     volumes:
       - .:/code
     links:
-      - demo_04_service_01_mongodb
-    command: python3 events.py
-  demo_04_service_01_mongodb:
+      - granja_service_mongodb
+    command: python3 app/events.py
+  granja_service_mongodb:
     image: mongo:5.0
     volumes:
-      - demo_04_service_01_mongodb_container:/data/db
+      - granja_service_mongodb_container:/data/db
     logging:
         driver: none
 
 volumes:
-  demo_04_service_01_mongodb_container:
+  granja_service_mongodb_container:
 
 networks:
   default:
-    name: demo_04
+    name: granja
     external: true
