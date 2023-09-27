@@ -19,6 +19,20 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 
 
+class Slot(BaseModel):
+    id: str | None = None
+    tipo: int
+    edad: int
+    coordenada_x: int
+    coordenada_y int
+
+    description: str = ""
+
+    def __init__(self, **kargs):
+        if "_id" in kargs:
+            kargs["id"] = str(kargs["_id"])
+        BaseModel.__init__(self, **kargs)
+
 class Player(BaseModel):
     id: str | None = None
     name: str
