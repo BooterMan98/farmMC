@@ -13,7 +13,7 @@ class Emit:
 
     def connect(self):
         self.connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host='demo_04_message_broker')
+            pika.ConnectionParameters(host='granja_message_broker')
         )
 
         self.channel = self.connection.channel()
@@ -36,7 +36,7 @@ class Receive:
     def __init__(self):
         logging.info("Waiting for messages...")
         self.connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host='demo_04_message_broker')
+            pika.ConnectionParameters(host='granja_message_broker')
         )
 
         self.channel = self.connection.channel()

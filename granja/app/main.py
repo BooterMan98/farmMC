@@ -21,6 +21,7 @@ logging.basicConfig(level=logging.INFO,
 
 class User(BaseModel):
     id: str | None = None
+    Name: str
     FarmWidth: int
     FarmHeight: int
 
@@ -33,7 +34,7 @@ class Constructions(BaseModel):
     id: str | None = None
     UserId: str
     xCoordinate: int
-    xCoordinate: int
+    yCoordinate: int
     HasPlant: bool
     PlantId: str
     ReadyToPlant: bool
@@ -153,3 +154,25 @@ def players_create(player: Player):
     logging.info(f"✨ New player created: {new_player}")
 
     return new_player
+
+@app.get("/users", response_model=list[User])
+def users_all():
+    return [User(**user) for user in mongodb_client.service_01.users.find()]
+
+@app.post("/users")
+def users_create(user: User):
+    inserted_id = mongodb_client.service_01.users.insert_one(
+        user.dict()
+    ).inserted_id
+
+    new_user = User(
+        **mongodb_client.service_01.users.find_one(
+            {"_id": ObjectId(inserted_id)}
+        )
+    )
+
+    emit_events.send(inserted_id, "create", new_user.dict())
+
+    logging.info(f"✨ New user created: {new_user}")
+
+    return new_user
