@@ -19,14 +19,39 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 
 
-class Slot(BaseModel):
+class User(BaseModel):
     id: str | None = None
-    tipo: int
-    edad: int
-    coordenada_x: int
-    coordenada_y int
+    FarmWidth: int
+    FarmHeight: int
 
-    description: str = ""
+    def __init__(self, **kargs):
+        if "_id" in kargs:
+            kargs["id"] = str(kargs["_id"])
+        BaseModel.__init__(self, **kargs)
+
+class Constructions(BaseModel):
+    id: str | None = None
+    UserId: str
+    xCoordinate: int
+    xCoordinate: int
+    HasPlant: bool
+    PlantId: str
+    ReadyToPlant: bool
+    DaysTillDone: int
+
+    def __init__(self, **kargs):
+        if "_id" in kargs:
+            kargs["id"] = str(kargs["_id"])
+        BaseModel.__init__(self, **kargs)
+
+class Plants(BaseModel):
+    id: str | None = None
+    Name: str
+    DaysToGrow: int
+    LifeExpectancy: int
+    MinHarvest: int
+    MaxHarvest: int
+    Description: str
 
     def __init__(self, **kargs):
         if "_id" in kargs:
