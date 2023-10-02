@@ -1,0 +1,21 @@
+"userId":{
+    "expansion_actual": [10,10],
+    "expansion_maxima": [30,30],
+    "construcciones":{
+        "1,1":{
+            "estado":"habilitado",
+            "hidratacion":"regado",
+            "construccion":"tomates",
+            "fase_crecimiento":"1/4",
+            "calidad":"None",
+        },
+        "1,2":{
+            "estado":"habilitado",
+            "hidratacion":"seco",
+            "construccion":"naranjas",
+            "fase_crecimiento":"3/7",
+            "calidad":"Alta?",
+        }
+        , etc...
+    }
+}

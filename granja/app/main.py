@@ -1,4 +1,5 @@
 import logging
+import schedule
 
 from pymongo import MongoClient
 from bson.errors import InvalidId
@@ -19,22 +20,13 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 
 
-class User(BaseModel):
-    id: str | None = None
-    Name: str
-    FarmWidth: int
-    FarmHeight: int
 
-    def __init__(self, **kargs):
-        if "_id" in kargs:
-            kargs["id"] = str(kargs["_id"])
-        BaseModel.__init__(self, **kargs)
 
 class Constructions(BaseModel):
-    id: str | None = None
+    id: str | None = None # "posX,posY"
+    posX: str
+    posY: str
     UserId: str
-    xCoordinate: int
-    yCoordinate: int
     HasPlant: bool
     PlantId: str
     ReadyToPlant: bool
@@ -59,20 +51,16 @@ class Plants(BaseModel):
             kargs["id"] = str(kargs["_id"])
         BaseModel.__init__(self, **kargs)
 
-class Player(BaseModel):
+class User(BaseModel):
     id: str | None = None
-    name: str
-    age: int
-    number: int
-    team_id: str | None = None
-    avatar_url: str | None = None
-    description: str = ""
-
+    currentSize: str
+    maxSize: str
+    constructions: [Constructions]
+    
     def __init__(self, **kargs):
         if "_id" in kargs:
             kargs["id"] = str(kargs["_id"])
         BaseModel.__init__(self, **kargs)
-
 
 @app.get("/")
 async def root():
@@ -80,80 +68,44 @@ async def root():
     return {"Hello": "World"}
 
 
-@app.get("/players", response_model=list[Player])
-def players_all(team_id: str | None = None):
-    filters = {}
-
-    if team_id:
-        filters["team_id"] = team_id
-
-    return [Player(**player) for player in mongodb_client.service_01.players.find(filters)]
-
-
-@app.get("/players/{player_id}")
-def players_get(player_id: str):
+@app.post("/build")
+async def plant_request(userId: str, plantId: str, posX: str, posY: str):
     try:
-        player_id = ObjectId(player_id)
-        return Player(
-            **mongodb_client.service_01.players.find_one({"_id": player_id})
-        )
-    except (InvalidId, TypeError):
-        raise HTTPException(status_code=404, detail="Player not found")
-
-
-@app.put("/players/{player_id}")
-def players_update(player_id: str, player: dict):
-    try:
-        player_id = ObjectId(player_id)
+        #Get de BD para comprobar estado de slot para plantar...
+        farm = mongodb_client.service_01.players.find(userId)
+        slot = farm["construcciones"][posX+','+posY]
+        if slot["isAvailable"]:
+            plantInfo = mongodb_client.service_01.plants.find(plantId)
+            slot["plantId"] = plantId
+            slot["isAvailable"] = 0
+            slot["grownDays"] = 0
+            slot["hasPlant"] = 1
+            slot["daysTillDone"] = plantInfo["daysTillDone"]
+            slot["hp"] = plantInfo["hp"]
         mongodb_client.service_01.players.update_one(
-            {'_id': player_id}, {"$set": player})
-
-        emit_events.send(player_id, "update", player)
-
-        return Player(
-            **mongodb_client.service_01.players.find_one({"_id": player_id})
+            {'_id': userId}, {"$set": slot}
         )
-
     except (InvalidId, TypeError):
-        raise HTTPException(status_code=404, detail="Player not found")
+        raise HTTPException(status_code=404, detail="Position not available:["+posX+","+posY+"].")
 
 
-@app.delete("/players/{player_id}")
-def players_delete(player_id: str):
+
+@app.post("/harvest/{construction_id}")
+def harvest(construction_id: str, construction: dict):
     try:
-        player_id = ObjectId(player_id)
-        player = Player(
-            **mongodb_client.service_01.players.find_one({"_id": player_id})
+        construction_id = ObjectId(construction_id)
+        mongodb_client.service_01.constructions.update_one(
+            {'_id': construction_id}, {"$set": construction})
+
+        emit_events.send(construction_id, "update", construction)
+
+        return Constructions(
+            **mongodb_client.service_01.players.find_one({"_id": construction_id})
         )
+
     except (InvalidId, TypeError):
-        raise HTTPException(status_code=404, detail="Player not found")
-
-    mongodb_client.service_01.players.delete_one(
-        {"_id": ObjectId(player_id)}
-    )
-
-    emit_events.send(player_id, "delete", player.dict())
-
-    return player
-
-
-@app.post("/players")
-def players_create(player: Player):
-    inserted_id = mongodb_client.service_01.players.insert_one(
-        player.dict()
-    ).inserted_id
-
-    new_player = Player(
-        **mongodb_client.service_01.players.find_one(
-            {"_id": ObjectId(inserted_id)}
-        )
-    )
-
-    emit_events.send(inserted_id, "create", new_player.dict())
-
-    logging.info(f"✨ New player created: {new_player}")
-
-    return new_player
+        raise HTTPException(status_code=404, detail="Construction not found")
+    return
 
 @app.get("/users", response_model=list[User])
 def users_all():
@@ -176,3 +128,24 @@ def users_create(user: User):
     logging.info(f"✨ New user created: {new_user}")
 
     return new_user
+
+## New Day Flow
+
+def newDay():
+    # para cada usuario
+    var currUser = User()
+
+ 
+    for construction in currUser.constructions:
+        if construction.posX in range(int(currUser.currentSize.split(',')[0])):
+            if construction.posY in range(int(currUser.currentSize.split(",")[1])):
+                
+    
+    
+
+    
+    
+    
+    return
+
+schedule.every().day.do(newDay())
