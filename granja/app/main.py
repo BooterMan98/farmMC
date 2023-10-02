@@ -7,6 +7,8 @@ from bson.objectid import ObjectId
 from fastapi import FastAPI
 from fastapi import HTTPException
 from pydantic import BaseModel
+from typing import List
+
 
 from .events import Emit
 
@@ -26,11 +28,12 @@ class Constructions(BaseModel):
     id: str | None = None # "posX,posY"
     posX: str
     posY: str
-    UserId: str
-    HasPlant: bool
-    PlantId: str
-    ReadyToPlant: bool
-    DaysTillDone: int
+    userId: str
+    hasPlant: bool
+    plantId: str
+    readyToPlant: bool
+    daysTillDone: int
+    isWatered: bool
 
     def __init__(self, **kargs):
         if "_id" in kargs:
@@ -39,12 +42,12 @@ class Constructions(BaseModel):
 
 class Plants(BaseModel):
     id: str | None = None
-    Name: str
-    DaysToGrow: int
-    LifeExpectancy: int
-    MinHarvest: int
-    MaxHarvest: int
-    Description: str
+    name: str
+    daysToGrow: int
+    lifeExpectancy: int
+    minHarvest: int
+    maxHarvest: int
+    description: str
 
     def __init__(self, **kargs):
         if "_id" in kargs:
@@ -55,7 +58,7 @@ class User(BaseModel):
     id: str | None = None
     currentSize: str
     maxSize: str
-    constructions: [Constructions]
+    constructions: List[Constructions]
     
     def __init__(self, **kargs):
         if "_id" in kargs:
@@ -113,9 +116,7 @@ def users_all():
 
 @app.post("/users")
 def users_create(user: User):
-    inserted_id = mongodb_client.service_01.users.insert_one(
-        user.dict()
-    ).inserted_id
+    inserted_id = user.id
 
     new_user = User(
         **mongodb_client.service_01.users.find_one(
@@ -134,17 +135,17 @@ def users_create(user: User):
 def newDay():
     # para cada usuario
     var currUser = User()
-
+    # Consulta lluvia
+    isNotRaining = False
  
     for construction in currUser.constructions:
         if construction.posX in range(int(currUser.currentSize.split(',')[0])):
             if construction.posY in range(int(currUser.currentSize.split(",")[1])):
-                
-    
-    
-
-    
-    
+                if construction.isWatered:
+                    construction.dayStillDone =- 1
+                    construction.daysToGrow += 1
+                    if isNotRaining:
+                        construction.isWatered = False
     
     return
 
