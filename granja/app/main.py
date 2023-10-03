@@ -8,10 +8,24 @@ from fastapi import FastAPI
 from fastapi import HTTPException
 from pydantic import BaseModel
 from typing import List
-
+import json
 
 from .events import Emit
 
+
+def getPlants():
+    jsonPath = './plants.json'
+    try:
+        with open(jsonPath, 'r') as json_file:
+            plantsData = json.load(json_file)
+
+        # Now, 'data' contains the contents of the JSON file as a Python variable
+        print(plantsData)
+        return plantsData
+    except FileNotFoundError:
+        print(f"The file '{jsonPath}' was not found.")
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
 
 app = FastAPI()
 mongodb_client = MongoClient("granja_service_mongodb", 27017)
@@ -56,6 +70,7 @@ class Plants(BaseModel):
 
 class User(BaseModel):
     id: str | None = None
+    userId: str
     currentSize: str
     maxSize: str
     constructions: List[Constructions]
@@ -64,6 +79,8 @@ class User(BaseModel):
         if "_id" in kargs:
             kargs["id"] = str(kargs["_id"])
         BaseModel.__init__(self, **kargs)
+
+mongodb_client.service_01.User.create_index([("userId", 1)], name="user_index", unique=True)
 
 @app.get("/")
 async def root():
@@ -130,23 +147,42 @@ def users_create(user: User):
 
     return new_user
 
+@app.post("/upgradeFarm")
+def upgrade(user: User):
+    mongodb_client.service_01.users.find(user.id)
+    
+
+
+
+
 ## New Day Flow
 
 def newDay():
     # para cada usuario
-    var currUser = User()
-    # Consulta lluvia
-    isNotRaining = False
- 
-    for construction in currUser.constructions:
-        if construction.posX in range(int(currUser.currentSize.split(',')[0])):
-            if construction.posY in range(int(currUser.currentSize.split(",")[1])):
-                if construction.isWatered:
-                    construction.dayStillDone =- 1
-                    construction.daysToGrow += 1
-                    if isNotRaining:
-                        construction.isWatered = False
-    
+    try:
+        users = mongodb_client.service_1.User.find()
+    except:
+        print("error")
+    else:
+        for user in users:
+            isRaining = False
+            for construction in user.constructions:
+                if construction.posX in range(int(user.currentSize.split(',')[0])):
+                    if construction.posY in range(int(user.currentSize.split(",")[1])):
+                        if construction.readyToPlant and construction.isWatered:
+                            print("Help")
+                            construction.dayStillDone =- 1
+                            construction.daysToGrow += 1
+                            if not isRaining:
+                                construction.isWatered = False
+        
+            try:
+                mongodb_client.service_1.User.update_one({"userId": user["userId"]}, {"$set": {"constructions": Constructions}})
+            except:
+                print("error")
+
     return
 
 schedule.every().day.do(newDay())
+
+
