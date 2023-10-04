@@ -30,7 +30,6 @@ def getPlants():
 app = FastAPI()
 mongodb_client = MongoClient("granja_service_mongodb", 27017)
 
-emit_events = Emit()
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
@@ -79,7 +78,6 @@ class User(BaseModel):
             kargs["id"] = str(kargs["_id"])
         BaseModel.__init__(self, **kargs)
 
-mongodb_client.service_01.User.create_index([("", 1)], name=index_name, unique=True)
 
 @app.get("/")
 async def root():

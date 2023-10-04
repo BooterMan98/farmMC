@@ -14,7 +14,7 @@ services:
     links:
       - dummy_service_mongodb
     command: python3 app/events.py
-  granja_service_mongodb:
+  dummy_service_mongodb:
     image: mongo:5.0
     volumes:
       - dummy_service_mongodb_container:/data/db
