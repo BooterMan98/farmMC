@@ -169,9 +169,14 @@ async def plant_request(userId: str, plantId: str, posX: str, posY: str):
     except (InvalidId, TypeError):
         raise HTTPException(status_code=404, detail="Position not available:["+posX+","+posY+"].")
 
-@app.get("/users", response_model=list[User])
+@app.get("/users/all", response_model=list[User])
 def users_all():
-    return [User(**user) for user in mongodb_client.service_01.users.find()]
+    try:
+        userList = mongodb_client.service_01.users.find()
+        return [User(**user) for user in userList]
+
+    except:
+        HTTPException(status_code=404, detail="Something wasn't found")
 
 @app.get("/users/{user_id}")
 def users_get(user_id: str):
@@ -286,4 +291,9 @@ def newDay():
 
 schedule.every().day.do(newDay)
 
+@app.get("/newDay")
+def manualNewDay():
+    newDay()
+
+schedule.every().day.do(newDay)
 
