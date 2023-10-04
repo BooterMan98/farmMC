@@ -69,7 +69,7 @@ class Constructions(BaseModel):
     posY: int
     hasPlant: bool
     plantId: str
-    readyToPlant: bool
+    isBuilt: bool
     daysTillDone: int
     isWatered: bool
 
@@ -94,7 +94,7 @@ class Plants(BaseModel):
 
 class User(BaseModel):
     id: str | None = None
-    userId: str
+    userId: str | None = None
     currentSize: str
     maxSize: str
     constructions: List[Constructions]
@@ -218,8 +218,12 @@ def users_create(id: str):
     userDict = {}
     constructions = []
     for i in range(10):
-        constructions.append({'posX': i, 'posY': i, 'hasPlant': False, 'plantId': '', 'readyToPlant': False, 'daysTillDone': 2, 'isWatered': False})
-    userDict = {'userMicroServiceId': id, 'currentSize': 10, 'maxSize': 20, 'constructions': constructions }
+        for j in range(10):
+            if i < 3 and j < 3:
+                constructions.append({'posX': i, 'posY': j, 'hasPlant': False, 'plantId': '', 'isBuilt': True, 'daysTillDone': 2, 'isWatered': False})
+            else:
+                constructions.append({'posX': i, 'posY': j, 'hasPlant': False, 'plantId': '', 'isBuilt': False, 'daysTillDone': 2, 'isWatered': False})
+    userDict = {'userId': id, 'currentSize': str(10), 'maxSize': str(20), 'constructions': constructions }
     inserted_id = mongodb_client.service_01.users.insert_one(userDict).inserted_id
 
     new_user = User(
