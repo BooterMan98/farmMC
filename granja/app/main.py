@@ -279,15 +279,15 @@ def newDay():
             for construction in user.constructions:
                 if construction.posX in range(int(user.currentSize.split(',')[0])):
                     if construction.posY in range(int(user.currentSize.split(",")[1])):
-                        if construction.readyToPlant and construction.isWatered:
+                        if construction.isBuilt and construction.isWatered:
                             print("Help")
                             construction.daysTillDone =- 1
                             construction.daysToGrow += 1
                             if not isRaining:
                                 construction.isWatered = False
-                        if not construction.readyToPlant and construction.daysTillDone > 0:
+                        if not construction.isBuilt and construction.daysTillDone > 0:
                             construction.daysTillDone =- 1
-                            construction.readyToPlant = True if construction.daysTillDone == 0 else False
+                            construction.isBuilt = True if construction.daysTillDone == 0 else False
         
             try:
                 mongodb_client.service_1.User.update_one({"userId": user["userId"]}, {"$set": {"constructions": Constructions}})
