@@ -1,0 +1,34 @@
+{
+    "01":{
+        "Name": "Arandano",
+        "DaysToGrow": 10,
+        "LifeExpectancy": 2,
+        "MinHarvest": 4,
+        "MaxHarvest": 10,
+        "Description": "El arándano es un fruto carnoso que crece silvestre en casi todo el hemisferio norte. Es una baya globosa, de unos 6mm de diámetro y de color negro azulado. Su pulpa es aromática, jugosa y de sabor algo ácido. Contiene numerosas semillas pardas de pequeño tamaño."
+    },
+    "02":{
+        "Name": "Palto",
+        "DaysToGrow": 28,
+        "LifeExpectancy": 10,
+        "MinHarvest": 8,
+        "MaxHarvest": 12,
+        "Description": "Árbol siempreverde de hasta 15 metros de altura, de tronco recto, corto y corteza rugosa. Hojas grandes, verdes, simples, alternas, de 6 - 30 cm de largo, que forman un ramaje denso y muy abundante. Flores pequeñas, arracimadas, fragantes, blanco-verdosas, 1 - 3 cm de ancho."
+    },
+    "03":{
+        "Name": "Zanahoria",
+        "DaysToGrow": 4,
+        "LifeExpectancy": 1,
+        "MinHarvest": 2,
+        "MaxHarvest": 3,
+        "Description": "Raíz vegetal de color naranja y textura leñosa. Se le considera uno de los vegetales que más salud aporta al organismo humano gracias a su alto contenido de vitaminas y minerales."
+    },
+    "04":{
+        "Name": "Lechuga",
+        "DaysToGrow": 3,
+        "LifeExpectancy": 1,
+        "MinHarvest": 1,
+        "MaxHarvest": 4,
+        "Description": "Hortaliza formada por grandes hojas que se disponen unas sobre otras formando en algunos casos un repollo. Las hay de diferentes formas, tamaños y colores, habiendo lechugas verdes y rojas. Pueden tener las hojas más o menos dentadas."
+    }
+}
