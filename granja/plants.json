@@ -1,0 +1,8 @@
+{
+    "name": "Arandano",
+    "daysToGrow": 10,
+    "lifeExpectancy": 2,
+    "minHarvest": 4,
+    "maxHarvest": 10,
+    "description": "El arándano es un fruto carnoso que crece silvestre en casi todo el hemisferio norte. Es una baya globosa, de unos 6mm de diámetro y de color negro azulado. Su pulpa es aromática, jugosa y de sabor algo ácido. Contiene numerosas semillas pardas de pequeño tamaño."
+}
