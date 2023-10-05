@@ -280,25 +280,18 @@ def upgrade(userId: str):
 
 def upgradeFarm(user: User):
 
-    currentRow = user.currentSize[0]
-    currentCol = user.currentSize[1]
+    currentSize = int(user.currentSize)
     constructions = user.constructions.copy()
     nextTier = user.nextTier
-    if currentCol == currentRow:
-        for j in range(currentCol):
-            constructions[currentRow][j].daysTillDone = 2
-        nextTier += 1
-        currentRow += 1
-    else:
-        for i in range(currentRow):
-            constructions[i][currentCol].daysTillDone = 2
-        nextTier += 1
-        currentCol += 1
-    currentSize = [currentRow,currentRow]
-    if nextTier > 9:
-        nextTier = -1
+    for j in range(currentSize):
+        constructions[currentSize][j].daysTillDone = 2
+    for i in range(currentSize):
+        constructions[i][currentSize].daysTillDone = 2
+    nextTier += 1
+    currentSize += 1
 
-    return {constructions, nextTier, currentSize}
+
+    return {constructions, nextTier, str(currentSize)}
 
 
 
@@ -318,7 +311,6 @@ def newDay():
                 if construction.posX in range(int(user.currentSize.split(',')[0])):
                     if construction.posY in range(int(user.currentSize.split(",")[1])):
                         if construction.isBuilt and construction.isWatered:
-                            print("Help")
                             construction.daysTillDone =- 1
                             construction.daysToGrow += 1
                             if not isRaining:
