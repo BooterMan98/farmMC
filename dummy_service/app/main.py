@@ -9,23 +9,7 @@ from pydantic import BaseModel
 from typing import List
 import json
 import random
-
-
-
-
-def getPlants():
-    jsonPath = './plants.json'
-    try:
-        with open(jsonPath, 'r') as json_file:
-            plantsData = json.load(json_file)
-
-        # Now, 'data' contains the contents of the JSON file as a Python variable
-        print(plantsData)
-        return plantsData
-    except FileNotFoundError:
-        print(f"The file '{jsonPath}' was not found.")
-    except json.JSONDecodeError as e:
-        print(f"Error decoding JSON: {e}")
+import os
 
 app = FastAPI()
 mongodb_client = MongoClient("granja_service_mongodb", 27017)
@@ -33,9 +17,6 @@ mongodb_client = MongoClient("granja_service_mongodb", 27017)
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
-
-
-
 
 class Constructions(BaseModel):
     id: str | None = None # "posX,posY"
@@ -125,3 +106,16 @@ def buyConstruction(plantId:str, userId:str):
 def buyConstruction(constId:str, userId:str):
     viable = random.choice([True, False])
     return viable
+
+@app.post("/plants")
+def insertPlants():
+    f= open ('app/plants.json', "r") 
+    # Reading from file
+    data = json.loads(f.read())
+
+    # Iterating through the json list
+    for plant in data["Plantas"]:
+        mongodb_client.service_01.plants.insert_one(plant)
+
+    # Closing file
+    f.close()

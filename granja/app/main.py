@@ -52,16 +52,8 @@ def getPlants():
         print(f"Error decoding JSON: {e}")  
 '''
 
-def insertPlants():
-    collection = mongodb_client.plants
-    requesting = []
-    with open(r"./plants.json") as f:
-        for jsonObj in f:
-            myDict = json.loads(jsonObj)
-            requesting.append(InsertOne(myDict))
 
-    result = collection.bulk_write(requesting)
-    client.close()
+    
 
 class Constructions(BaseModel):
     id: str | None = None # "posX,posY"
@@ -110,6 +102,7 @@ mongodb_client.service_01.User.create_index([("userId", 1)], name="user_index", 
 async def root():
     logging.info("👋 Hello world (end-point)!")
     return {"Hello": "World"}
+
 
 
 @app.post("/build")
