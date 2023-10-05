@@ -89,6 +89,7 @@ class User(BaseModel):
     userId: str | None = None
     currentSize: str
     maxSize: str
+    nextTier: int
     constructions: List[Constructions]
     
     def __init__(self, **kargs):
@@ -109,7 +110,7 @@ async def root():
 async def plant_request(userId: str, plantId: str, posX: str, posY: str):
     try:
         #Get de BD para comprobar estado de slot para plantar...
-        farm = mongodb_client.service_01.players.find(userId)
+        farm = mongodb_client.service_01.users.find(userId)
         slot = farm["construcciones"][posX+','+posY]
         if slot["isAvailable"]:
             plantInfo = mongodb_client.service_01.plants.find(plantId)
@@ -119,7 +120,7 @@ async def plant_request(userId: str, plantId: str, posX: str, posY: str):
             slot["hasPlant"] = 1
             slot["daysTillDone"] = plantInfo["daysTillDone"]
             slot["hp"] = plantInfo["hp"]
-        mongodb_client.service_01.players.update_one(
+        mongodb_client.service_01.users.update_one(
             {'_id': userId}, {"$set": slot}
         )
     except (InvalidId, TypeError):
@@ -135,7 +136,7 @@ def harvest(construction_id: str, construction: dict):
         emit_events.send(construction_id, "update", construction)
 
         return Constructions(
-            **mongodb_client.service_01.players.find_one({"_id": construction_id})
+            **mongodb_client.service_01.users.find_one({"_id": construction_id})
         )
 
     except (InvalidId, TypeError):
@@ -146,7 +147,7 @@ def harvest(construction_id: str, construction: dict):
 async def plant_request(userId: str, plantId: str, posX: str, posY: str):
     try:
         #Get de BD para comprobar estado de slot para plantar...
-        farm = mongodb_client.service_01.players.find(userId)
+        farm = mongodb_client.service_01.users.find(userId)
         slot = farm["construcciones"][posX+','+posY]
         if slot["isAvailable"]:
             plantInfo = mongodb_client.service_01.plants.find(plantId)
@@ -156,7 +157,7 @@ async def plant_request(userId: str, plantId: str, posX: str, posY: str):
             slot["hasPlant"] = 1
             slot["daysTillDone"] = plantInfo["daysTillDone"]
             slot["hp"] = plantInfo["hp"]
-        mongodb_client.service_01.players.update_one(
+        mongodb_client.service_01.users.update_one(
             {'_id': userId}, {"$set": slot}
         )
     except (InvalidId, TypeError):
@@ -213,9 +214,9 @@ def users_create(id: str):
     for i in range(10):
         for j in range(10):
             if i < 3 and j < 3:
-                constructions.append({'posX': i, 'posY': j, 'hasPlant': False, 'plantId': '', 'isBuilt': True, 'daysTillDone': 2, 'isWatered': False})
+                constructions.append({'posX': i, 'posY': j, 'hasPlant': False, 'plantId': '', 'isBuilt': True, 'daysTillDone': 0, 'isWatered': False, 'nextTier': 3})
             else:
-                constructions.append({'posX': i, 'posY': j, 'hasPlant': False, 'plantId': '', 'isBuilt': False, 'daysTillDone': 2, 'isWatered': False})
+                constructions.append({'posX': i, 'posY': j, 'hasPlant': False, 'plantId': '', 'isBuilt': True, 'daysTillDone': 0, 'isWatered': False, 'nextTier': 3})
     userDict = {'userId': id, 'currentSize': str(10), 'maxSize': str(20), 'constructions': constructions }
     inserted_id = mongodb_client.service_01.users.insert_one(userDict).inserted_id
 
@@ -253,8 +254,15 @@ def plants_create(user: Plants):
 #insertPlants()
 @app.post("/upgradeFarm")
 def upgrade(user: User):
-    mongodb_client.service_01.users.find(user.id)
+    try:
+        currentUser = mongodb_client.service_01.users.find(user.id)
+    except:
+        raise HTTPException(status_code=404, detail="User not found")
     
+    try:
+        isTierUpgradeViable = False
+
+
 
 
 
