@@ -87,7 +87,7 @@ def checkConstructionViable(tier:str, userId:str):
     return viable
 
 @app.post("/buyConstruction")
-def buyConstruction(constId:str, userId:str):
+def buyConstruction(tier:str, userId:str):
     viable = random.choice([True, False])
     return viable
 
