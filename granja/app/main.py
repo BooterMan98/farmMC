@@ -107,27 +107,6 @@ async def root():
     return {"Hello": "World"}
 
 
-
-@app.post("/build")
-async def plant_request(userId: str, plantId: str, posX: str, posY: str):
-    try:
-        #Get de BD para comprobar estado de slot para plantar...
-        farm = mongodb_client.service_01.users.find(userId)
-        slot = farm["construcciones"][posX+','+posY]
-        if slot["isAvailable"]:
-            plantInfo = mongodb_client.service_01.plants.find(plantId)
-            slot["plantId"] = plantId
-            slot["isAvailable"] = 0
-            slot["grownDays"] = 0
-            slot["hasPlant"] = 1
-            slot["daysTillDone"] = plantInfo["daysTillDone"]
-            slot["hp"] = plantInfo["hp"]
-        mongodb_client.service_01.users.update_one(
-            {'_id': userId}, {"$set": slot}
-        )
-    except (InvalidId, TypeError):
-        raise HTTPException(status_code=404, detail="Position not available:["+posX+","+posY+"].")
-
 @app.post("/harvest/{construction_id}")
 def harvest(construction_id: str, construction: dict):
     try:
@@ -151,7 +130,7 @@ async def plant_request(userId: str, plantId: str, posX: str, posY: str):
         #Get de BD para comprobar estado de slot para plantar...
         farm = mongodb_client.service_01.users.find(userId)
         slot = farm["construcciones"][posX+','+posY]
-        if slot["isAvailable"]:
+        if slot["isBuilt"]:
             plantInfo = mongodb_client.service_01.plants.find(plantId)
             slot["plantId"] = plantId
             slot["isAvailable"] = 0
@@ -177,9 +156,8 @@ def users_all():
 @app.get("/users/{user_id}")
 def users_get(user_id: str):
     try:
-        user_id = ObjectId(user_id)
         return User(
-            **mongodb_client.service_01.users.find_one({"_id": user_id})
+            **mongodb_client.service_01.users.find_one({"userId": user_id})
         )
     except (InvalidId, TypeError):
         raise HTTPException(status_code=404, detail="User not found")
@@ -188,27 +166,6 @@ def users_get(user_id: str):
 def plants_all():
     return [Plants(**plant) for plant in mongodb_client.service_01.plants.find()]
 
-'''
-@app.post("/users")
-def users_create(user: User):
-    #inserted_id = user.id
-    inserted_id = mongodb_client.service_01.users.insert_one(
-        user.dict()
-    ).inserted_id
-
-    new_user = User(
-        **mongodb_client.service_01.users.find_one(
-            {"_id": ObjectId(inserted_id)}
-        )
-    )
-
-    emit_events.send(inserted_id, "create", new_user.dict())
-
-    logging.info(f"✨ New user created: {new_user}")
-
-    return new_user
-
-'''
 @app.post("/users")
 def users_create(id: str):
     userDict = {}
@@ -216,10 +173,10 @@ def users_create(id: str):
     for i in range(10):
         for j in range(10):
             if i < 3 and j < 3:
-                constructions.append({'posX': i, 'posY': j, 'hasPlant': False, 'plantId': '', 'isBuilt': True, 'daysTillDone': 0, 'isWatered': False, 'nextTier': 3})
+                constructions.append({'posX': i, 'posY': j, 'hasPlant': False, 'plantId': '', 'isBuilt': True, 'daysTillDone': 0, 'isWatered': False, 'nextTier': 4})
             else:
-                constructions.append({'posX': i, 'posY': j, 'hasPlant': False, 'plantId': '', 'isBuilt': True, 'daysTillDone': 0, 'isWatered': False, 'nextTier': 3})
-    userDict = {'userId': id, 'currentSize': [3,3], 'maxSize': [10,10], 'constructions': constructions }
+                constructions.append({'posX': i, 'posY': j, 'hasPlant': False, 'plantId': '', 'isBuilt': False, 'daysTillDone': 0, 'isWatered': False, 'nextTier': 4})
+    userDict = {'userId': id, 'currentSize': str(3), 'maxSize': str(10), 'constructions': constructions, 'nextTier': 4 }
     inserted_id = mongodb_client.service_01.users.insert_one(userDict).inserted_id
 
     new_user = User(
@@ -260,21 +217,6 @@ def upgrade(userId: str):
         currentUser = mongodb_client.service_01.users.find(userId)
     except:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    if currentUser.nextTier == -1:
-        raise HTTPException(status_code=403, detail="Maximum upgrades reached")
-
-    try:
-        url = f"http://dummy_service:80/checkConstructionViable?tier={currentUser.nextTier}&userId={userId}"
-        isUpgradeViable = requests.get(url).json()
-        if isUpgradeViable:
-            url = f"http://dummy_service:80/buyConstruction?tier={currentUser.nextTier}&userId={userId}"
-            purchaseSuccesfull = requests.get(url).json()
-            if purchaseSuccesfull:
-                changes = upgradeFarm(currentUser)
-    except:
-        raise HTTPException(status_code=404, detail="User not found")
-    else:
 
         mongodb_client.service_01.users.update_one({'_id': userId}, {"$set": changes})
 

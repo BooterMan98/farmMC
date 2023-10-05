@@ -107,13 +107,20 @@ def buyConstruction(constId:str, userId:str):
     viable = random.choice([True, False])
     return viable
 
-@app.get("/plants", response_model=list[Plants])
+@app.get("/plants", response_model=list)
 def plants_all():
-    return [Plants(**plant) for plant in mongodb_client.service_01.plants.find()]
+    results = []
+    plants =  mongodb_client.service_01.plants.find()
+    for plant in plants:
+        aux = plant
+        del aux["_id"]
+        results.append(aux)
+    print(results)
+    return results
 
 @app.post("/plants")
 def insertPlants():
-    f= open ('app/plants.json', "r")
+    f= open ('./app/plants.json', "r")
     
     # Reading from file
     data = json.loads(f.read())
@@ -121,7 +128,8 @@ def insertPlants():
     # Iterating through the json list
     
     for plant in data["Plantas"]:
-        mongodb_client.service_01.plants.insert_one(plant)
-    
+        plant = Plants(**plant)
+        mongodb_client.service_01.plants.insert_one(plant.dict())
+
     # Closing file
     f.close()

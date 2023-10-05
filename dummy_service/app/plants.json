@@ -1,7 +1,7 @@
 {
     "Plantas": [
         {
-            "id": "1234",
+            "id":23,
             "name": "Arandano",
             "daysToGrow": 10,
             "lifeExpectancy": 2,
@@ -10,7 +10,7 @@
             "description": "El arándano es un fruto carnoso que crece silvestre en casi todo el hemisferio norte. Es una baya globosa, de unos 6mm de diámetro y de color negro azulado. Su pulpa es aromática, jugosa y de sabor algo ácido. Contiene numerosas semillas pardas de pequeño tamaño."
         },
         {
-            "id": "1234",
+            "id":23,
             "name": "Palto",
             "daysToGrow": 28,
             "lifeExpectancy": 10,
@@ -19,7 +19,7 @@
             "description": "Árbol siempreverde de hasta 15 metros de altura, de tronco recto, corto y corteza rugosa. Hojas grandes, verdes, simples, alternas, de 6 - 30 cm de largo, que forman un ramaje denso y muy abundante. Flores pequeñas, arracimadas, fragantes, blanco-verdosas, 1 - 3 cm de ancho."
         },
         {
-            "id": "1234",
+            "id":23,
             "name": "Zanahoria",
             "daysToGrow": 4,
             "lifeExpectancy": 1,
@@ -28,7 +28,7 @@
             "description": "Raíz vegetal de color naranja y textura leñosa. Se le considera uno de los vegetales que más salud aporta al organismo humano gracias a su alto contenido de vitaminas y minerales."
         },
         {
-            "id": "1234",
+            "id":23,
             "name": "Lechuga",
             "daysToGrow": 3,
             "lifeExpectancy": 1,
