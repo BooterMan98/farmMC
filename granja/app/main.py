@@ -14,6 +14,8 @@ import json
 from .events import Emit
 
 
+
+
 def getPlants():
     jsonPath = './plants.json'
     try:
@@ -87,8 +89,8 @@ class Plants(BaseModel):
 class User(BaseModel):
     id: str | None = None
     userId: str | None = None
-    currentSize: str
-    maxSize: str
+    currentSize: List(int)
+    maxSize: List(int)
     nextTier: int
     constructions: List[Constructions]
     
@@ -217,7 +219,7 @@ def users_create(id: str):
                 constructions.append({'posX': i, 'posY': j, 'hasPlant': False, 'plantId': '', 'isBuilt': True, 'daysTillDone': 0, 'isWatered': False, 'nextTier': 3})
             else:
                 constructions.append({'posX': i, 'posY': j, 'hasPlant': False, 'plantId': '', 'isBuilt': True, 'daysTillDone': 0, 'isWatered': False, 'nextTier': 3})
-    userDict = {'userId': id, 'currentSize': str(10), 'maxSize': str(20), 'constructions': constructions }
+    userDict = {'userId': id, 'currentSize': [3,3], 'maxSize': [10,10], 'constructions': constructions }
     inserted_id = mongodb_client.service_01.users.insert_one(userDict).inserted_id
 
     new_user = User(
@@ -253,17 +255,50 @@ def plants_create(user: Plants):
 
 #insertPlants()
 @app.post("/upgradeFarm")
-def upgrade(user: User):
+def upgrade(userId: str):
     try:
-        currentUser = mongodb_client.service_01.users.find(user.id)
+        currentUser = mongodb_client.service_01.users.find(userId)
     except:
         raise HTTPException(status_code=404, detail="User not found")
     
+    if currentUser.nextTier == -1:
+        raise HTTPException(status_code=403, detail="Maximum upgrades reached")
+
     try:
-        isTierUpgradeViable = False
+        url = f"http://dummy_service:80/checkConstructionViable?tier={currentUser.nextTier}&userId={userId}"
+        isUpgradeViable = requests.get(url).json()
+        if isUpgradeViable:
+            url = f"http://dummy_service:80/buyConstruction?tier={currentUser.nextTier}&userId={userId}"
+            purchaseSuccesfull = requests.get(url).json()
+            if purchaseSuccesfull:
+                changes = upgradeFarm(currentUser)
+    except:
+        raise HTTPException(status_code=404, detail="User not found")
+    else:
 
+        mongodb_client.service_01.users.update_one({'_id': userId}, {"$set": changes})
 
+def upgradeFarm(user: User):
 
+    currentRow = user.currentSize[0]
+    currentCol = user.currentSize[1]
+    constructions = user.constructions.copy()
+    nextTier = user.nextTier
+    if currentCol == currentRow:
+        for j in range(currentCol):
+            constructions[currentRow][j].daysTillDone = 2
+        nextTier += 1
+        currentRow += 1
+    else:
+        for i in range(currentRow):
+            constructions[i][currentCol].daysTillDone = 2
+        nextTier += 1
+        currentCol += 1
+    currentSize = [currentRow,currentRow]
+    if nextTier > 9:
+        nextTier = -1
+
+    return {constructions, nextTier, currentSize}
 
 
 
@@ -293,7 +328,8 @@ def newDay():
             try:
                 mongodb_client.service_1.User.update_one({"userId": user["userId"]}, {"$set": {"constructions": Constructions}})
             except:
-                print("error")
+                raise HTTPException(status_code=404, detail="User not found")
+
 
     return
 
