@@ -14,6 +14,8 @@ import json
 from .events import Emit
 
 
+
+
 def getPlants():
     jsonPath = './plants.json'
     try:
@@ -210,14 +212,35 @@ def plants_create(user: Plants):
 
 #insertPlants()
 @app.post("/upgradeFarm")
-def upgrade(user: User):
+def upgrade(userId: str):
     try:
-        currentUser = mongodb_client.service_01.users.find(user.id)
+        currentUser = mongodb_client.service_01.users.find(userId)
     except:
         raise HTTPException(status_code=404, detail="User not found")
 
+        mongodb_client.service_01.users.update_one({'_id': userId}, {"$set": changes})
 
+def upgradeFarm(user: User):
 
+    currentRow = user.currentSize[0]
+    currentCol = user.currentSize[1]
+    constructions = user.constructions.copy()
+    nextTier = user.nextTier
+    if currentCol == currentRow:
+        for j in range(currentCol):
+            constructions[currentRow][j].daysTillDone = 2
+        nextTier += 1
+        currentRow += 1
+    else:
+        for i in range(currentRow):
+            constructions[i][currentCol].daysTillDone = 2
+        nextTier += 1
+        currentCol += 1
+    currentSize = [currentRow,currentRow]
+    if nextTier > 9:
+        nextTier = -1
+
+    return {constructions, nextTier, currentSize}
 
 
 
@@ -230,8 +253,10 @@ def newDay():
         print("error")
     else:
         for user in users:
-            isRaining = False
-            for construction in user.constructions:
+            url = f"http://dummy_service:80/weather"
+            isRaining = requests.get(url).json()
+            constructions = user.constructions.copy()
+            for construction in constructions:
                 if construction.posX in range(int(user.currentSize.split(',')[0])):
                     if construction.posY in range(int(user.currentSize.split(",")[1])):
                         if construction.isBuilt and construction.isWatered:
@@ -245,9 +270,10 @@ def newDay():
                             construction.isBuilt = True if construction.daysTillDone == 0 else False
         
             try:
-                mongodb_client.service_1.User.update_one({"userId": user["userId"]}, {"$set": {"constructions": Constructions}})
+                mongodb_client.service_1.User.update_one({"userId": user["userId"]}, {"$set": {"constructions": construction}})
             except:
-                print("error")
+                raise HTTPException(status_code=404, detail="User not found")
+
 
     return
 
