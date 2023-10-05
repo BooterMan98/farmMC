@@ -311,8 +311,10 @@ def newDay():
         print("error")
     else:
         for user in users:
-            isRaining = False
-            for construction in user.constructions:
+            url = f"http://dummy_service:80/weather"
+            isRaining = requests.get(url).json()
+            constructions = user.constructions.copy()
+            for construction in constructions:
                 if construction.posX in range(int(user.currentSize.split(',')[0])):
                     if construction.posY in range(int(user.currentSize.split(",")[1])):
                         if construction.isBuilt and construction.isWatered:
@@ -326,7 +328,7 @@ def newDay():
                             construction.isBuilt = True if construction.daysTillDone == 0 else False
         
             try:
-                mongodb_client.service_1.User.update_one({"userId": user["userId"]}, {"$set": {"constructions": Constructions}})
+                mongodb_client.service_1.User.update_one({"userId": user["userId"]}, {"$set": {"constructions": construction}})
             except:
                 raise HTTPException(status_code=404, detail="User not found")
 
