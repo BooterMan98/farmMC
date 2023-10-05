@@ -23,5 +23,4 @@
 hs_err_pid*
 replay_pid*
 
-granja/app/__pycache__/
-dummy_service/app/__pycache__/
+__pycache__/

@@ -7,28 +7,11 @@ from bson.errors import InvalidId
 from bson.objectid import ObjectId
 from fastapi import FastAPI
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List
 import json
 
 from .events import Emit
-
-
-
-
-def getPlants():
-    jsonPath = './plants.json'
-    try:
-        with open(jsonPath, 'r') as json_file:
-            plantsData = json.load(json_file)
-
-        # Now, 'data' contains the contents of the JSON file as a Python variable
-        print(plantsData)
-        return plantsData
-    except FileNotFoundError:
-        print(f"The file '{jsonPath}' was not found.")
-    except json.JSONDecodeError as e:
-        print(f"Error decoding JSON: {e}")
 
 app = FastAPI()
 mongodb_client = MongoClient("granja_service_mongodb", 27017)
@@ -38,24 +21,7 @@ emit_events = Emit()
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 
-'''
-def getPlants():
-    jsonPath = './plants.json'
-    try:
-        with open(jsonPath, 'r') as json_file:
-            plantsData = json.load(json_file)
-
-        # Now, 'data' contains the contents of the JSON file as a Python variable
-        print(plantsData)
-        return plantsData
-    except FileNotFoundError:
-        print(f"The file '{jsonPath}' was not found.")
-    except json.JSONDecodeError as e:
-        print(f"Error decoding JSON: {e}")  
-'''
-
-
-    
+   
 
 class Constructions(BaseModel):
     id: str | None = None # "posX,posY"
