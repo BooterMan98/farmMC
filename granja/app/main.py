@@ -89,8 +89,8 @@ class Plants(BaseModel):
 class User(BaseModel):
     id: str | None = None
     userId: str | None = None
-    currentSize: List[int]
-    maxSize: List[int]
+    currentSize: str
+    maxSize: str
     nextTier: int
     constructions: List[Constructions]
     
