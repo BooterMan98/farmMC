@@ -111,7 +111,7 @@ async def plant_request(userId: str, plantId: str, posX: str, posY: str):
         raise HTTPException(status_code=404, detail="Position not available:["+posX+","+posY+"].")
 
 @app.get("/users/all", response_model=list[User])
-def users_all():
+def users_all() -> List[User]:
     try:
         userList = mongodb_client.service_01.users.find()
         return [User(**user) for user in userList]
@@ -120,7 +120,7 @@ def users_all():
         HTTPException(status_code=404, detail="Something wasn't found")
 
 @app.get("/users/{user_id}")
-def users_get(user_id: str):
+def users_get(user_id: str) -> User:
     try:
         return User(
             **mongodb_client.service_01.users.find_one({"userId": user_id})
@@ -133,7 +133,7 @@ def plants_all():
     return [Plants(**plant) for plant in mongodb_client.service_01.plants.find()]
 
 @app.post("/users")
-def users_create(id: str):
+def users_create(id: str) -> User:
     userDict = {}
     constructions = []
     for i in range(10):
@@ -178,13 +178,29 @@ def plants_create(user: Plants):
 
 #insertPlants()
 @app.post("/upgradeFarm")
-def upgrade(userId: str):
+def upgrade(userId: str) -> User:
     try:
         currentUser = mongodb_client.service_01.users.find(userId)
     except:
         raise HTTPException(status_code=404, detail="User not found")
+        
+    if currentUser.nextTier == -1:
+        raise HTTPException(status_code=403, detail="Maximum upgrades reached")
 
+    try:
+        url = f"http://dummy_service:80/checkConstructionViable?tier={currentUser.nextTier}&userId={userId}"
+        isUpgradeViable = requests.get(url).json()
+        if isUpgradeViable:
+            url = f"http://dummy_service:80/buyConstruction?tier={currentUser.nextTier}&userId={userId}"
+            purchaseSuccesfull = requests.get(url).json()
+            if purchaseSuccesfull:
+                changes = upgradeFarm(currentUser)
+    except:
+        raise HTTPException(status_code=404, detail="User not found")
+    else:
         mongodb_client.service_01.users.update_one({'_id': userId}, {"$set": changes})
+        returnValue = mongodb_client.service_01.users.find_one(userId)
+        return User(**returnValue)
 
 def upgradeFarm(user: User):
 
