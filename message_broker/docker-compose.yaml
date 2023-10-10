@@ -7,5 +7,5 @@ services:
 
 networks:
   default:
-    name: granja
+    name: microsvcs
     external: true
