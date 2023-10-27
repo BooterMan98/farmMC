@@ -24,19 +24,21 @@ logging.basicConfig(level=logging.INFO,
    
 
 class Constructions(BaseModel):
-    id: str | None = None # "posX,posY"
+    id: str | None = None
     posX: int
     posY: int
-    hasPlant: bool
-    plantId: str
-    isBuilt: bool
-    daysTillDone: int
-    isWatered: bool
+    hasPlant: bool = Field(default=False)
+    plantId: str = Field(default='')
+    isBuilt: bool = Field(default=False)
+    daysTillDone: int = Field(default=0)
+    hp: int = Field(default=0)
+    isWatered: bool = Field(default=False)
 
     def __init__(self, **kargs):
         if "_id" in kargs:
             kargs["id"] = str(kargs["_id"])
         BaseModel.__init__(self, **kargs)
+
 
 class Plants(BaseModel):
     id: str | None = None
@@ -91,33 +93,69 @@ def harvest(construction_id: str, construction: dict):
     return
 
 @app.post("/plants")
-async def plant_request(userId: str, plantId: str, posX: str, posY: str):
+async def plant_request(userId: str, plantName: str, posX: int, posY: int):
     try:
         #Get de BD para comprobar estado de slot para plantar...
-        farm = mongodb_client.service_01.users.find(userId)
-        slot = farm["construcciones"][posX+','+posY]
+        farm = mongodb_client.service_01.users.find_one({"userId": userId})
+        slot = farm["constructions"][posX*10+posY]
         if slot["isBuilt"]:
-            plantInfo = mongodb_client.service_01.plants.find(plantId)
-            slot["plantId"] = plantId
-            slot["isAvailable"] = 0
-            slot["grownDays"] = 0
-            slot["hasPlant"] = 1
-            slot["daysTillDone"] = plantInfo["daysTillDone"]
-            slot["hp"] = plantInfo["hp"]
-        mongodb_client.service_01.users.update_one(
-            {'_id': userId}, {"$set": slot}
-        )
+            plantInfo = mongodb_client.service_01.plants.find_one({"name": plantName})
+            update_data = {
+                "constructions.$.plantId": plantInfo["id"],
+                "constructions.$.isAvailable": 0,
+                "constructions.$.grownDays": 0,
+                "constructions.$.hasPlant": 1,
+                "constructions.$.daysTillDone": plantInfo["daysToGrow"],
+                "constructions.$.hp": plantInfo["lifeExpectancy"]
+            }
+            match_construction = {"posX": posX, "posY": posY, "isBuilt": True}
+            mongodb_client.service_01.users.update_one(
+                {"userId": userId, "constructions": {"$elemMatch": match_construction}},
+                {"$set": update_data}
+            )
+            
+            logging.info(f"✨ Plant request successfull: {update_data}")
+
+            user_slot = mongodb_client.service_01.users.find_one(
+                {"userId": userId, "constructions": {"$elemMatch": match_construction}},
+                {"constructions.$": 1}
+            )
+            if user_slot and 'constructions' in user_slot:
+                specific_slot = user_slot['constructions'][0]
+            else:
+                specific_slot = None
+
+            return specific_slot
+
+        print("paso4")
     except (InvalidId, TypeError):
-        raise HTTPException(status_code=404, detail="Position not available:["+posX+","+posY+"].")
+        raise HTTPException(status_code=404, detail="Position not available: "+str(posX*10+posY))
+
+@app.post("/add_plants")
+def insertPlants():
+    f= open ('./app/plants.json', "r")
+    
+    # Reading from file
+    data = json.loads(f.read())
+    
+    # Iterating through the json list
+    
+    for plant in data["Plantas"]:
+        plant = Plants(**plant)
+        mongodb_client.service_01.plants.insert_one(plant.dict())
+
+    # Closing file
+    f.close()
 
 @app.get("/users/all", response_model=list[User])
-def users_all() -> List[User]:
+def users_all():
     try:
-        userList = mongodb_client.service_01.users.find()
-        return [User(**user) for user in userList]
+        userList = mongodb_client.service_01.users.find({})
+        userOutput = [User(**user) for user in userList]
+        return userOutput
 
     except:
-        HTTPException(status_code=404, detail="Something wasn't found")
+        raise HTTPException(status_code=404, detail="Something wasn't found")
 
 @app.get("/users/{user_id}")
 def users_get(user_id: str) -> User:
@@ -139,9 +177,10 @@ def users_create(id: str) -> User:
     for i in range(10):
         for j in range(10):
             if i < 3 and j < 3:
-                constructions.append({'posX': i, 'posY': j, 'hasPlant': False, 'plantId': '', 'isBuilt': True, 'daysTillDone': 0, 'isWatered': False, 'nextTier': 4})
+                constructions.append( {"posX":i, "posY":j, "isBuilt":True } )
             else:
-                constructions.append({'posX': i, 'posY': j, 'hasPlant': False, 'plantId': '', 'isBuilt': False, 'daysTillDone': 0, 'isWatered': False, 'nextTier': 4})
+                constructions.append( { "posX":i,"posY":j })
+
     userDict = {'userId': id, 'currentSize': str(3), 'maxSize': str(10), 'constructions': constructions, 'nextTier': 4 }
     inserted_id = mongodb_client.service_01.users.insert_one(userDict).inserted_id
 
