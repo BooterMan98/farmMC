@@ -262,31 +262,47 @@ def upgradeFarm(user: User):
 def newDay():
     # para cada usuario
     try:
-        users = mongodb_client.service_1.User.find()
+        userList = mongodb_client.service_01.users.find({})
+        userOutput = [User(**user) for user in userList]    
     except:
         print("error")
     else:
-        for user in users:
+        print(userOutput)
+        for user in userOutput:
             url = f"http://dummy_service:80/weather"
-            isRaining = requests.get(url).json()
-            constructions = user.constructions.copy()
-            for construction in constructions:
-                if construction.posX in range(int(user.currentSize.split(',')[0])):
-                    if construction.posY in range(int(user.currentSize.split(",")[1])):
-                        if construction.isBuilt and construction.isWatered:
-                            construction.daysTillDone =- 1
-                            construction.daysToGrow += 1
-                            if not isRaining:
-                                construction.isWatered = False
-                        if not construction.isBuilt and construction.daysTillDone > 0:
-                            construction.daysTillDone =- 1
-                            construction.isBuilt = True if construction.daysTillDone == 0 else False
-        
-            try:
-                mongodb_client.service_1.User.update_one({"userId": user["userId"]}, {"$set": {"constructions": construction}})
-            except:
-                raise HTTPException(status_code=404, detail="User not found")
+            isRaining = True#isRaining = requests.get(url).json()
 
+            OGconstructions = user.constructions.copy()
+            constructions = []
+            maxSize = int(user.currentSize)
+            for construction in OGconstructions:
+                if (construction.posX in range(maxSize) and 
+                    construction.posY in range(maxSize)):
+                    
+                    if construction.isBuilt and construction.hasPlant:
+                        if construction.isWatered:
+                            construction.daysTillDone -= 1
+                            construction.isWatered = False
+                        if isRaining:
+                            construction.isWatered = True
+                            
+                    elif not construction.isBuilt and construction.daysTillDone > 0:
+                        construction.daysTillDone -= 1
+                        construction.isBuilt = construction.daysTillDone == 0
+                        
+                constructions.append(construction.dict())
+
+
+                            
+            print("$########## Final: ",constructions)
+            try:
+                print(user.userId)
+                mongodb_client.service_01.users.update_one({"userId": user.userId}, {"$set": {"constructions": constructions}})
+
+                
+            except Exception as err:
+                print(f"Unexpected {err=}, {type(err)=}")
+                raise HTTPException(status_code=404, detail="User not found")
 
     return
 
