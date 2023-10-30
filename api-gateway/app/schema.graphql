@@ -50,7 +50,7 @@ type Query {
 
 type Mutation {
     createUser(userId: String!): User!
-    plant(userId: String!, plantName: String! ,posX: String!, posY: String!):
+    plant(userId: String!, plantName: String! ,posX: String!, posY: String!):Constructions!
     harvest(constructionId: ID!): Constructions!
     upgradeFarm(userId: String!): User!
 }
