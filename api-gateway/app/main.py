@@ -43,7 +43,7 @@ def resolve_list_users(obj, resolve_info: GraphQLResolveInfo):
     # Make it slow
     time.sleep(3)
     
-    response = requests.get(f"http://granja_service/user/all")
+    response = requests.get(f"http://granja_service/users/")
 
     if response.status_code == 200:
         return response.json()
@@ -60,9 +60,7 @@ def resolve_list_plants(obj, resolve_info: GraphQLResolveInfo):
 
 @mutation.field("createUser")
 def resolve_create_user(obj, resolve_info: GraphQLResolveInfo, userId):
-    payload = dict(id=userId)
-
-    return requests.post(f"http://granja_service/users", json=payload).json()
+    return requests.post(f"http://granja_service/users?id={userId}").json()
 
 
 @mutation.field("plant")

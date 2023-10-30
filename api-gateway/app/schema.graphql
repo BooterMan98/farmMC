@@ -31,11 +31,11 @@ type Plants {
 
 
 type User {
-    id: ID!
+    id: ID
     userId: String
-    currentSize: String!
-    maxSize: String!
-    nextTier: Int!
+    currentSize: String
+    maxSize: String
+    nextTier: Int
     constructions: [Constructions]
 }
 
