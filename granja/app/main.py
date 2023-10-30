@@ -229,18 +229,23 @@ def plants_create(user: Plants):
 @app.post("/upgradeFarm")
 def upgrade(userId: str) -> User:
     try:
-        currentUser = mongodb_client.service_01.users.find(userId)
+        #currentUser = mongodb_client.service_01.users.find_one(userId)
+        currentUser= mongodb_client.service_01.users.find_one({"userId": userId})
+        
     except:
         raise HTTPException(status_code=404, detail="User not found")
-        
-    if currentUser.nextTier == -1:
+    
+    nextTier = currentUser["nextTier"]
+    if nextTier == -1:
         raise HTTPException(status_code=403, detail="Maximum upgrades reached")
 
     try:
-        url = f"http://dummy_service:80/checkConstructionViable?tier={currentUser.nextTier}&userId={userId}"
+        url = f"http://dummy_service:80/checkConstructionViable?tier={nextTier}&userId={userId}"
+
+        test(url)
         isUpgradeViable = requests.get(url).json()
         if isUpgradeViable:
-            url = f"http://dummy_service:80/buyConstruction?tier={currentUser.nextTier}&userId={userId}"
+            url = f"http://dummy_service:80/buyConstruction?tier={nextTier}&userId={userId}"
             purchaseSuccesfull = requests.get(url).json()
             if purchaseSuccesfull:
                 changes = upgradeFarm(currentUser)
@@ -250,6 +255,11 @@ def upgrade(userId: str) -> User:
         mongodb_client.service_01.users.update_one({'_id': userId}, {"$set": changes})
         returnValue = mongodb_client.service_01.users.find_one(userId)
         return User(**returnValue)
+
+def test(currentUser: User):
+    #isUpgradeViable = requests.get(url).json()
+    print("holaaaaaaaaaaaaa")
+    print("test", requests.get(url).json())
 
 def upgradeFarm(user: User):
 
