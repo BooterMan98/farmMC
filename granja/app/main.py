@@ -161,7 +161,9 @@ def users_all():
 def users_get(user_id: str) -> User:
     try:
         return User(
-            **mongodb_client.service_01.users.find_one({"userId": user_id})
+        **mongodb_client.service_01.users.find_one(
+            {"userId": user_id}
+        )
         )
     except (InvalidId, TypeError):
         raise HTTPException(status_code=404, detail="User not found")

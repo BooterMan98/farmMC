@@ -50,7 +50,7 @@ def resolve_list_users(obj, resolve_info: GraphQLResolveInfo):
 
 
 @query.field("listPlants")
-def resolve_list_players(obj, resolve_info: GraphQLResolveInfo):
+def resolve_list_plants(obj, resolve_info: GraphQLResolveInfo):
     response = requests.get(f"http://granja_service/plants")
 
     if response.status_code == 200:
@@ -59,8 +59,8 @@ def resolve_list_players(obj, resolve_info: GraphQLResolveInfo):
 
 
 @mutation.field("createUser")
-def resolve_create_user(obj, resolve_info: GraphQLResolveInfo, id):
-    payload = dict(id=id)
+def resolve_create_user(obj, resolve_info: GraphQLResolveInfo, userId):
+    payload = dict(id=userId)
 
     return requests.post(f"http://granja_service/users", json=payload).json()
 

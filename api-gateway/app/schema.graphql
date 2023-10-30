@@ -7,7 +7,7 @@ schema {
 
 
 type Constructions {
-    id: ID!
+    id: ID
     posX: Int!
     posY: Int!
     hasPlant: Boolean
@@ -32,7 +32,7 @@ type Plants {
 
 type User {
     id: ID!
-    userId: String!
+    userId: String
     currentSize: String!
     maxSize: String!
     nextTier: Int!
@@ -43,13 +43,13 @@ type User {
 
 
 type Query {
-    listUsers: [User]!
+    listUsers: [User]
     listPlants: [Plants]!    
-    getUser(id: ID!): User!
+    getUser(id: ID!): User
 }
 
 type Mutation {
-    createUser(userId: String!): User!
+    createUser(userId: String!): User
     plant(userId: String!, plantName: String! ,posX: String!, posY: String!):Constructions!
     harvest(constructionId: ID!): Constructions!
     upgradeFarm(userId: String!): User!
