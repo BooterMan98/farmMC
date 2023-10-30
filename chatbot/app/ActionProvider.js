@@ -10,9 +10,9 @@ class ActionProvider {
   }
 
   createFarm() {
-    let succesfullFarmCreation = false
+    let succesfullFarmCreation = true
     if (succesfullFarmCreation) {
-      const successMessage = this.createChatBotMessage("Farm created Succesfully")
+      const successMessage = this.createChatBotMessage("Farm created Succesfully", {widget: 'farmRender'})
       this.updateChatbotState(successMessage)
     } else {
       const failureMessage = this.createChatBotMessage("There was a problem and the farm could not be created, try again later :(")
