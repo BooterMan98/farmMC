@@ -1,3 +1,5 @@
+import { use } from "react";
+
 class ActionProvider {
   constructor(createChatBotMessage, setStateFunc) {
     this.createChatBotMessage = createChatBotMessage;
@@ -44,10 +46,11 @@ class ActionProvider {
     }
   }
   
-  upgradeFarm() {
-    let succesfullFarmUpgrade = false
+  async upgradeFarm() {
+    let [succesfullFarmUpgrade, currentSize] = await requestPlantUpgrade("1232421")
+    console.log(succesfullFarmUpgrade, currentSize)
     if (succesfullFarmUpgrade) {
-      const successMessage = this.createChatBotMessage("Farm upgrade on the way")
+      const successMessage = this.createChatBotMessage(`Farm upgrade on the way, your new size wil be ${currentSize}x${currentSize}.`)
       this.updateChatbotState(successMessage)
     } else {
       const failureMessage = this.createChatBotMessage("There was a problem and the farm could not be upgraded, try again later :(")
@@ -56,7 +59,7 @@ class ActionProvider {
   }
 
   async plantCrop(plant, posX, posY) {
-    const cropPlantedSuccessfully = await this.requestToPlantCrop(plant, posX, posY)
+    const cropPlantedSuccessfully = await requestToPlantCrop(plant, posX, posY)
     if (cropPlantedSuccessfully) {
       const successMessage = this.createChatBotMessage("crop planted Succesfully")
       this.updateChatbotState(successMessage)
@@ -109,35 +112,69 @@ class ActionProvider {
     }))
   }
 
-  async requestToPlantCrop(plant, posX, posY) {
-    try {
-      const response = await fetch("http://localhost:5050", {
-        method: "POST",
-        body: JSON.stringify({
-          query: `mutation { plant(userId:"1232421", plantName: ${plant}, posX:${posX}, ´posY${posY} ) { hasPlant }}`,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-  
-      const data = await response.json();
-  
-      if (data.errors) {
-        throw new Error(data.errors[0].message);
-      }
-  
-    } catch (error) {
-      const failureMessage = this.createChatBotMessage(`Theated. Error: ${error.message}`);
-      this.updateChatbotState(failureMessage);
-      return false
-    }
-
-  
-    return true
-  }
   
 }
 
-
 export default ActionProvider
+
+// Helpers below... Beware...
+
+async function requestToPlantCrop(plant, posX, posY) {
+  try {
+    const response = await fetch("http://localhost:5050", {
+      method: "POST",
+      body: JSON.stringify({
+        query: `mutation { plant(userId:"1232421", plantName: "${plant}", posX:${posX}, posY${posY} ) { hasPlant }}`,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.json();
+
+    if (data.errors) {
+      throw new Error(data.errors[0].message);
+    }
+
+  } catch (error) {
+    const failureMessage = this.createChatBotMessage(`Theated. Error: ${error.message}`);
+    this.updateChatbotState(failureMessage);
+    return false
+  }
+
+
+  return true
+}
+
+async function requestPlantUpgrade(userId=1232421) {
+  let sresponse = ""
+  try {
+    const response = await fetch("http://localhost:5050", {
+      method: "POST",
+      body: JSON.stringify({
+        query: `mutation { upgradeFarm(userId:"${userId}") { currentSize }}`,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.json();
+    sresponse = await data.data.upgradeFarm
+
+    if (data.errors) {
+      throw new Error(data.errors[0].message);
+    }
+
+  } catch (error) {
+    const failureMessage = this.createChatBotMessage(`Error: ${error.message}`);
+    this.updateChatbotState(failureMessage);
+    return false, sresponse.currentSize
+  }
+
+
+  console.log(sresponse)
+  return [ true, sresponse.currentSize]
+}
+
