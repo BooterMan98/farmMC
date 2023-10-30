@@ -242,11 +242,11 @@ def upgrade(userId: str) -> User:
     try:
         url = f"http://dummy_service:80/checkConstructionViable?tier={nextTier}&userId={userId}"
 
-        test(url)
-        isUpgradeViable = requests.get(url).json()
+        #test(url)
+        isUpgradeViable = True #requests.get(url).json()
         if isUpgradeViable:
             url = f"http://dummy_service:80/buyConstruction?tier={nextTier}&userId={userId}"
-            purchaseSuccesfull = requests.get(url).json()
+            purchaseSuccesfull = True #requests.get(url).json()
             if purchaseSuccesfull:
                 changes = upgradeFarm(currentUser)
     except:
@@ -259,20 +259,27 @@ def upgrade(userId: str) -> User:
 def test(currentUser: User):
     #isUpgradeViable = requests.get(url).json()
     print("holaaaaaaaaaaaaa")
-    print("test", requests.get(url).json())
 
 def upgradeFarm(user: User):
-
-    currentSize = int(user.currentSize)
-    constructions = user.constructions.copy()
-    nextTier = user.nextTier
+    #print(user["constructions"])
+    constructions = [Constructions(**construction) for construction in user["constructions"]]
+    #print(constructions)
+    currentSize = int(user["currentSize"])
+    #constructions = user.constructions.copy()
+    nextTier = user["nextTier"]
+    print("hola1")
+    print(constructions[currentSize].daysTillDone)
     for j in range(currentSize):
-        constructions[currentSize][j].daysTillDone = 2
+        constructions[currentSize].daysTillDone = 2 #constructions[currentSize][j]["daysTillDone"] = 2
+    print("hola2")
+    '''
     for i in range(currentSize):
-        constructions[i][currentSize].daysTillDone = 2
+         constructions[i][currentSize].daysTillDone = 2
+    '''
     nextTier += 1
     currentSize += 1
-
+    print("hola3")
+    #al parecer falta transformar constructions a json
 
     return {constructions, nextTier, str(currentSize)}
 
