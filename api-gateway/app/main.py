@@ -14,7 +14,6 @@ from graphql.type import GraphQLResolveInfo
 
 from starlette.middleware.cors import CORSMiddleware
 
-from .dataloaders import TeamLoader
 
 type_defs = load_schema_from_path("./app/schema.graphql")
 
@@ -25,7 +24,6 @@ user = ObjectType("User")
 plant = ObjectType("Plants")
 construction = ObjectType("Constructions")
 
-team_loader = TeamLoader()
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
@@ -39,7 +37,7 @@ def resolve_get_user(obj, resolve_info: GraphQLResolveInfo, id):
         return response.json()
 
 
-@user.field("user")
+@user.field("userId")
 @query.field("listUsers")
 def resolve_list_users(obj, resolve_info: GraphQLResolveInfo):
     # Make it slow
