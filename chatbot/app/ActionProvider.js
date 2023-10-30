@@ -9,6 +9,13 @@ class ActionProvider {
     this.updateChatbotState(greetingMessage)
   }
 
+  noEnougthParameters() {
+    console.log("ad")
+    const message = this.createChatBotMessage("Hey! I need more information to understand what you want to do >:c")
+    this.updateChatbotState(message)
+
+  }
+
   async createFarm() {
     try {
       const response = await fetch("http://localhost:5050", {
@@ -48,8 +55,8 @@ class ActionProvider {
     }
   }
 
-  plantCrop() {
-    let cropPlantedSuccessfully = false
+  async plantCrop(plant, posX, posY) {
+    const cropPlantedSuccessfully = await this.requestToPlantCrop(plant, posX, posY)
     if (cropPlantedSuccessfully) {
       const successMessage = this.createChatBotMessage("crop planted Succesfully")
       this.updateChatbotState(successMessage)
@@ -101,6 +108,36 @@ class ActionProvider {
     	...prevState, messages: [...prevState.messages, message]
     }))
   }
+
+  async requestToPlantCrop(plant, posX, posY) {
+    try {
+      const response = await fetch("http://localhost:5050", {
+        method: "POST",
+        body: JSON.stringify({
+          query: `mutation { plant(userId:"1232421", plantName: ${plant}, posX:${posX}, ´posY${posY} ) { hasPlant }}`,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+  
+      const data = await response.json();
+  
+      if (data.errors) {
+        throw new Error(data.errors[0].message);
+      }
+  
+    } catch (error) {
+      const failureMessage = this.createChatBotMessage(`Theated. Error: ${error.message}`);
+      this.updateChatbotState(failureMessage);
+      return false
+    }
+
+  
+    return true
+  }
+  
 }
+
 
 export default ActionProvider
