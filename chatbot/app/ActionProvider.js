@@ -47,7 +47,7 @@ class ActionProvider {
   }
   
   async upgradeFarm() {
-    let [succesfullFarmUpgrade, currentSize] = await requestPlantUpgrade("1232421")
+    let [succesfullFarmUpgrade, currentSize] = await this.requestPlantUpgrade("1232421")
     console.log(succesfullFarmUpgrade, currentSize)
     if (succesfullFarmUpgrade) {
       const successMessage = this.createChatBotMessage(`Farm upgrade on the way, your new size wil be ${currentSize}x${currentSize}.`)
@@ -59,7 +59,7 @@ class ActionProvider {
   }
 
   async plantCrop(plant, posX, posY) {
-    const cropPlantedSuccessfully = await requestToPlantCrop(plant, posX, posY)
+    const cropPlantedSuccessfully = await this.requestToPlantCrop(plant, posX, posY)
     if (cropPlantedSuccessfully) {
       const successMessage = this.createChatBotMessage("crop planted Succesfully")
       this.updateChatbotState(successMessage)
@@ -102,6 +102,17 @@ class ActionProvider {
   }
 
 
+  async harvestPlant(posX, posY) {
+    let succesfullharvest = await this.requestPlantHarvest("1232421", posX, posY)
+    if (succesfullharvest) {
+      const successMessage = this.createChatBotMessage(`Plant Harvested! ${currentSize}x${currentSize}.`)
+      this.updateChatbotState(successMessage)
+    } else {
+      const failureMessage = this.createChatBotMessage("There was a problem and the farm could not be upgraded, try again later :(")
+      this.updateChatbotState(failureMessage)
+    }
+  }
+  
   updateChatbotState(message) {
  
 // NOTE: This function is set in the constructor, and is passed in      // from the top level Chatbot component. The setState function here     // actually manipulates the top level state of the Chatbot, so it's     // important that we make sure that we preserve the previous state.
@@ -112,14 +123,10 @@ class ActionProvider {
     }))
   }
 
-  
-}
+  // Helpers below... Beware...
+// these helpers could be reduced to one function
 
-export default ActionProvider
-
-// Helpers below... Beware...
-
-async function requestToPlantCrop(plant, posX, posY) {
+async requestToPlantCrop(plant, posX, posY) {
   try {
     const response = await fetch("http://localhost:5050", {
       method: "POST",
@@ -147,7 +154,35 @@ async function requestToPlantCrop(plant, posX, posY) {
   return true
 }
 
-async function requestPlantUpgrade(userId=1232421) {
+async requestPlantHarvest(userId, posX, posY) {
+  try {
+    const response = await fetch("http://localhost:5050", {
+      method: "POST",
+      body: JSON.stringify({
+        query: `mutation { harvest(userId: "${userId}", posX:${posX}, posY:${posY} ) { hasPlant }}`,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.json();
+
+    if (data.errors) {
+      throw new Error(data.errors[0].message);
+    }
+
+  } catch (error) {
+    const failureMessage = this.createChatBotMessage(`Theated. Error: ${error.message}`);
+    this.updateChatbotState(failureMessage);
+    return false
+  }
+
+
+  return true
+}
+
+async requestPlantUpgrade(userId=1232421) {
   let sresponse = ""
   try {
     const response = await fetch("http://localhost:5050", {
@@ -177,4 +212,11 @@ async function requestPlantUpgrade(userId=1232421) {
   console.log(sresponse)
   return [ true, sresponse.currentSize]
 }
+
+
+
+  
+}
+
+export default ActionProvider
 

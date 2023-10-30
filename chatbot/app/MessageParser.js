@@ -24,6 +24,16 @@ class MessageParser {
       this.actionProvider.upgradeFarm()
     } else if (lowerCaseMessage.includes("plant")  && lowerCaseMessage.includes("list")) {
       this.actionProvider.listPlants()
+    } else if (lowerCaseMessage.includes("harvest") &&lowerCaseMessage.includes("plant")) {
+      const parameters = lowerCaseMessage.split(" ")
+      console.log(parameters.length < 5)
+      console.log(parameters.length)
+      if (parameters.lenght < 4) {
+        console.log("dafsfa")
+        this.actionProvider.notEnougthParameters()
+      } else {
+        this.actionProvider.harvestPlant(parameters[2], parameters[3])
+      } 
     }
   }
 }
