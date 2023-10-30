@@ -279,6 +279,7 @@ def upgradeFarm(user: User):
     nextTier += 1
     currentSize += 1
     print("hola3")
+
     #al parecer falta transformar constructions a json
 
     return {constructions, nextTier, str(currentSize)}
