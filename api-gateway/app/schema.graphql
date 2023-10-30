@@ -1,0 +1,56 @@
+
+schema {
+    query: Query
+    mutation: Mutation
+}
+
+
+
+type Constructions {
+    id: ID!
+    posX: Int!
+    posY: Int!
+    hasPlant: Boolean
+    plantId: String! 
+    isBuilt: Boolean
+    daysTillDone: Int!
+    hp: Int!
+    isWatered: Boolean
+}
+
+type Plants {
+    id: ID!
+    name: String!
+    daysToGrow: Int!
+    lifeExpectancy: Int!
+    minHarvest: Int!
+    maxHarvest: Int!
+    description: String!
+}
+
+
+
+type User {
+    id: ID!
+    userId: String!
+    currentSize: String!
+    maxSize: String!
+    nextTier: Int!
+    constructions: [Constructions]
+}
+
+
+
+
+type Query {
+    listUsers: [User]!
+    listPlants: [Plants]!    
+    getUser(id: ID!): User!
+}
+
+type Mutation {
+    createUser(userId: String!): User!
+    plant(userId: String!, plantName: String! ,posX: String!, posY: String!):
+    harvest(constructionId: ID!): Constructions!
+    upgradeFarm(userId: String!): User!
+}
