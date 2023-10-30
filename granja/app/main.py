@@ -5,11 +5,12 @@ import json
 from pymongo import MongoClient, InsertOne
 from bson.errors import InvalidId
 from bson.objectid import ObjectId
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi import HTTPException
 from pydantic import BaseModel, Field
 from typing import List
 import json
+from pymongo.errors import PyMongoError
 
 from .events import Emit
 
@@ -147,15 +148,20 @@ def insertPlants():
     # Closing file
     f.close()
 
-@app.get("/users/all", response_model=list[User])
+@app.get("/users", response_model=list[User])
 def users_all():
     try:
-        userList = mongodb_client.service_01.users.find({})
+        userList = list(mongodb_client.service_01.users.find({}))
+        print(userList)
         userOutput = [User(**user) for user in userList]
         return userOutput
 
-    except:
-        raise HTTPException(status_code=404, detail="Something wasn't found")
+    except PyMongoError:
+        raise HTTPException(status_code=500, detail="Database error")
+    except Exception as e:
+        # This is to catch other unexpected errors, but be cautious about exposing raw error messages to the client.
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
 
 @app.get("/users/{user_id}")
 def users_get(user_id: str) -> User:
@@ -167,6 +173,8 @@ def users_get(user_id: str) -> User:
         )
     except (InvalidId, TypeError):
         raise HTTPException(status_code=404, detail="User not found")
+
+
 
 @app.get("/plants", response_model=list[Plants])
 def plants_all():
@@ -315,6 +323,25 @@ schedule.every().day.do(newDay)
 @app.get("/newDay")
 def manualNewDay():
     newDay()
+
+
+@app.delete("/users/delete/{userId}")
+def deleteUser(userId: str):
+    try:
+        result = mongodb_client.service_01.users.delete_one({"userId": userId})
+
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # No content to return, so signify with a 204 status code
+        return Response(status_code=204)
+
+    except PyMongoError:
+        raise HTTPException(status_code=500, detail="Database error")
+    except Exception as e:
+        # Be cautious about exposing raw error messages to the client in a production environment.
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
 
 schedule.every().day.do(newDay)
 
