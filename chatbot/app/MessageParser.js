@@ -11,10 +11,12 @@ class MessageParser {
       this.actionProvider.greet()
     } else if (lowerCaseMessage.includes("create") && lowerCaseMessage.includes("farm")) {
       this.actionProvider.createFarm()
-    } else if (lowerCaseMessage.includes("plant")) {
+    } else if (lowerCaseMessage.includes("plant")  && lowerCaseMessage.includes("crop"))  {
       this.actionProvider.plantCrop()
     } else if (lowerCaseMessage.includes("upgrade") && lowerCaseMessage.includes("farm")) {
       this.actionProvider.upgradeFarm()
+    } else if (lowerCaseMessage.includes("plant")  && lowerCaseMessage.includes("list")) {
+      this.actionProvider.listPlants()
     }
   }
 }
