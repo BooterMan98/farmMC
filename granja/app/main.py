@@ -269,7 +269,9 @@ def newDay():
     else:
         print(userOutput)
         for user in userOutput:
-            url = f"http://dummy_service:80/weather"
+            url = f"http://dummy_service:80/weather/santiago"
+
+
             isRaining = True#isRaining = requests.get(url).json()
 
             OGconstructions = user.constructions.copy()

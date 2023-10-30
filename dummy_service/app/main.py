@@ -66,7 +66,7 @@ async def root():
     return {"Hello": "World"}
 
 
-@app.get("/weather")
+@app.get("/weather/{city}")
 def getWeather():
     isRaining = random.choice([True, False])
     return isRaining
