@@ -36,7 +36,6 @@ def resolve_get_user(obj, resolve_info: GraphQLResolveInfo, id):
     if response.status_code == 200:
         return response.json()
 
-@user.field('userId')
 @query.field("listUsers")
 def resolve_list_users(obj, resolve_info: GraphQLResolveInfo):
     response = requests.get(f"http://granja_service/users/")
@@ -56,8 +55,8 @@ def resolve_list_plants(obj, resolve_info: GraphQLResolveInfo):
 
 @mutation.field("createUser")
 def resolve_create_user(obj, resolve_info: GraphQLResolveInfo, userId):
-    print(f"http://granja_service/users/create?id={userId}")
-    return requests.post(f"http://granja_service/users/create?id={userId}").json()
+    print(f"http://granja_service/users?id={userId}")
+    return requests.post(f"http://granja_service/users?id={userId}").json()
 
 
 @mutation.field("plant")
@@ -74,10 +73,9 @@ def resolve_harvest(obj, resolve_info: GraphQLResolveInfo, construction_id, cons
     return requests.post(f"http://granja_service/harvest/{construction_id}", json=payload).json()
 
 @mutation.field("upgradeFarm")
-def resolve_upgrade_farm(obj, resolve_info: GraphQLResolveInfo, id):
-    payload = dict(userId=id)
+def resolve_upgrade_farm(obj, resolve_info: GraphQLResolveInfo, userId):
 
-    return requests.post(f"http://granja_service/upgradeFarm", json=payload).json()
+    return requests.post(f"http://granja_service/upgradeFarm?userId={userId}").json()
 
 
 schema = make_executable_schema(type_defs, query, mutation, user, construction,plant)
