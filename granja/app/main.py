@@ -180,7 +180,7 @@ def users_get(user_id: str) -> User:
 def plants_all():
     return [Plants(**plant) for plant in mongodb_client.service_01.plants.find()]
 
-@app.post("/users")
+@app.post("/users/create")
 def users_create(id: str) -> User:
     userDict = {}
     constructions = []
