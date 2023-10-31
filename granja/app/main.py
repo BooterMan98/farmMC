@@ -228,8 +228,8 @@ def plants_create(user: Plants):
 #insertPlants()
 @app.post("/upgradeFarm")
 def upgrade(userId: str) -> User:
+    newNextTier,newCurrentSize = None,None
     try:
-        #currentUser = mongodb_client.service_01.users.find_one(userId)
         currentUser= mongodb_client.service_01.users.find_one({"userId": userId})
         
     except:
@@ -242,47 +242,37 @@ def upgrade(userId: str) -> User:
     try:
         url = f"http://dummy_service:80/checkConstructionViable?tier={nextTier}&userId={userId}"
 
-        #test(url)
         isUpgradeViable = True #requests.get(url).json()
         if isUpgradeViable:
             url = f"http://dummy_service:80/buyConstruction?tier={nextTier}&userId={userId}"
             purchaseSuccesfull = True #requests.get(url).json()
             if purchaseSuccesfull:
-                changes = upgradeFarm(currentUser)
+                
+                constructions,newNextTier,newCurrentSize = upgradeFarm(currentUser)
+
+                mongodb_client.service_01.users.update_one(
+                {"userId": userId},
+                {"$set": {"constructions":constructions, "nextTier":newNextTier, "currentSize":newCurrentSize }}
+                )
+                
+                return User(**mongodb_client.service_01.users.find_one(   {"userId": userId} ))
     except:
         raise HTTPException(status_code=404, detail="User not found")
-    else:
-        mongodb_client.service_01.users.update_one({'_id': userId}, {"$set": changes})
-        returnValue = mongodb_client.service_01.users.find_one(userId)
-        return User(**returnValue)
-
-def test(currentUser: User):
-    #isUpgradeViable = requests.get(url).json()
-    print("holaaaaaaaaaaaaa")
 
 def upgradeFarm(user: User):
-    #print(user["constructions"])
-    constructions = [Constructions(**construction) for construction in user["constructions"]]
-    #print(constructions)
     currentSize = int(user["currentSize"])
-    #constructions = user.constructions.copy()
+    constructions = user["constructions"].copy()
     nextTier = user["nextTier"]
-    print("hola1")
-    print(constructions[currentSize].daysTillDone)
-    for j in range(currentSize):
-        constructions[currentSize].daysTillDone = 2 #constructions[currentSize][j]["daysTillDone"] = 2
-    print("hola2")
-    '''
-    for i in range(currentSize):
-         constructions[i][currentSize].daysTillDone = 2
-    '''
+    for j in range(nextTier):
+        constructions[nextTier*10+j]["daysTillDone"] = 2
+    
+    for i in range(nextTier):
+         constructions[i*10+nextTier]["daysTillDone"] = 2
+    
     nextTier += 1
     currentSize += 1
-    print("hola3")
 
-    #al parecer falta transformar constructions a json
-
-    return {constructions, nextTier, str(currentSize)}
+    return constructions, nextTier, str(currentSize)
 
 
 
