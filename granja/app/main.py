@@ -1,7 +1,6 @@
 import logging
 import schedule
 import json
-import time
 
 from pymongo import MongoClient, InsertOne
 from bson.errors import InvalidId
@@ -26,7 +25,7 @@ logging.basicConfig(level=logging.INFO,
    
 
 class Constructions(BaseModel):
-    id: str | None = None
+    id: str | None = None #borrar
     posX: int
     posY: int
     hasPlant: bool = Field(default=False)
@@ -35,6 +34,27 @@ class Constructions(BaseModel):
     daysTillDone: int = Field(default=0)
     hp: int = Field(default=0)
     isWatered: bool = Field(default=False)
+
+    class Config:
+        schema_extra = {
+            "example": 
+                [
+                    {
+                "posX": 0,
+                "posY": 0,
+                "hasPlant": False,
+                "plantId": "",
+                "isBuilt": True,
+                "daysTillDone": 0,
+                "hp": 0,
+                "isWatered": False
+                },                    
+                {
+                "etc..."
+                }
+                ]
+            }
+        
 
     def __init__(self, **kargs):
         if "_id" in kargs:
@@ -51,6 +71,20 @@ class Plants(BaseModel):
     maxHarvest: int
     description: str
 
+    class Config:
+        schema_extra = {
+            "example": 
+            {
+                "id": "65401e4bfe1ebc983d3df03a",
+                "name": "Arandano",
+                "daysToGrow": 10,
+                "lifeExpectancy": 2,
+                "minHarvest": 4,
+                "maxHarvest": 10,
+                "description": "El arándano es un fruto carnoso que crece silvestre en casi todo el hemisferio norte. Es una baya globosa, de unos 6mm de diámetro y de color negro azulado. Su pulpa es aromática, jugosa y de sabor algo ácido. Contiene numerosas semillas pardas de pequeño tamaño."
+            }            
+        }
+
     def __init__(self, **kargs):
         if "_id" in kargs:
             kargs["id"] = str(kargs["_id"])
@@ -63,6 +97,30 @@ class User(BaseModel):
     maxSize: str
     nextTier: int
     constructions: List[Constructions]
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "id": "123",
+                "userId": "Cesar",
+                "currentSize": "4",
+                "maxSize": "10",
+                "nextTier": 4,
+                "constructions": [
+                    {
+                        "posX": 0,
+                        "posY": 0,
+                        "hasPlant": False,
+                        "plantId": "Arandano",
+                        "isBuilt": True,
+                        "daysTillDone": 0,
+                        "hp": 0,
+                        "isWatered": False
+                    },
+                    {"etc..."}
+                ]
+            }
+        }
     
     def __init__(self, **kargs):
         if "_id" in kargs:
@@ -79,7 +137,10 @@ async def root():
 
 @app.post("/harvest/{construction_id}")
 def harvest(construction_id: str, construction: dict):
-    # BIG TODO: redo
+    '''
+    Harvest plant in a construction.
+    returns construction information.
+    '''
     try:
         construction_id = ObjectId(construction_id)
         mongodb_client.service_01.constructions.update_one(
@@ -97,6 +158,10 @@ def harvest(construction_id: str, construction: dict):
 
 @app.post("/plants")
 async def plant_request(userId: str, plantName: str, posX: int, posY: int):
+    '''
+    Seeds a plant in the construction posX, posY of a specific user.
+    returns specific constructions updated with plant.
+    '''
     try:
         #Get de BD para comprobar estado de slot para plantar...
         farm = mongodb_client.service_01.users.find_one({"userId": userId})
@@ -136,6 +201,9 @@ async def plant_request(userId: str, plantName: str, posX: int, posY: int):
 
 @app.post("/add_plants")
 def insertPlants():
+    '''
+    Add plants to the database from a json file, just for testing
+    '''
     f= open ('./app/plants.json', "r")
     
     # Reading from file
@@ -152,6 +220,10 @@ def insertPlants():
 
 @app.get("/users", response_model=list[User])
 def users_all():
+    '''
+    Fetches all users and their respective constructions.
+    returns all users info and constructions.
+    '''
     try:
         userList = list(mongodb_client.service_01.users.find({}))
         print(userList)
@@ -167,6 +239,10 @@ def users_all():
 
 @app.get("/users/{user_id}")
 def users_get(user_id: str) -> User:
+    '''
+    Fetches a specific user and its respective constructions.
+    returns user info and constructions.
+    '''
     try:
         return User(
         **mongodb_client.service_01.users.find_one(
@@ -180,10 +256,18 @@ def users_get(user_id: str) -> User:
 
 @app.get("/plants", response_model=list[Plants])
 def plants_all():
+    '''
+    Fetches all plants available in the database to be used in a construction.
+    returns list of plants.
+    '''
     return [Plants(**plant) for plant in mongodb_client.service_01.plants.find()]
 
 @app.post("/users")
 def users_create(id: str) -> User:
+    '''
+    Creates a new user.
+    Returns the new user and a list with user constructions.
+    '''
     userDict = {}
     constructions = []
     for i in range(10):
@@ -210,7 +294,10 @@ def users_create(id: str) -> User:
 
 @app.post("/newplant")
 def plants_create(user: Plants):
-    #inserted_id = user.id
+    '''
+    Adds a new plant to the database.
+    returns the new plant created.
+    '''
     inserted_id = mongodb_client.service_01.plants.insert_one(
         user.dict()
     ).inserted_id
@@ -230,7 +317,12 @@ def plants_create(user: Plants):
 #insertPlants()
 @app.post("/upgradeFarm")
 def upgrade(userId: str) -> User:
-    time.sleep(1)
+    '''
+    Increases the available constructions by 1 row and 1 column. Sets days till done parameter to 2.
+    It means that in 2 days the new rows and columns will be ready to plant.
+    returns user info with respective constructions
+    '''
+    mostrar(userId)
     newNextTier,newCurrentSize = None,None
     try:
         currentUser= mongodb_client.service_01.users.find_one({"userId": userId})
@@ -278,7 +370,8 @@ def upgradeFarm(user: User):
     return constructions, nextTier, str(currentSize)
 
 
-
+def mostrar(id):
+    print(id)
 ## New Day Flow
 def newDay():
     # para cada usuario
