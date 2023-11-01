@@ -14,7 +14,6 @@ const FarmRender = () => {
   return (
     <div>
       <img src={"https://placehold.co/300"} alt='A render of your farm' />
-      pepe
     </div>
   );
 };

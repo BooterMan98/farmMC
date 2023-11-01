@@ -20,6 +20,7 @@ class ActionProvider {
 
   async createFarm() {
     try {
+
       const response = await fetch("http://localhost:5050", {
         method: "POST",
         body: JSON.stringify({
@@ -30,13 +31,14 @@ class ActionProvider {
         },
       });
   
-      const data = await response.json();
+      let data = await response.json();
   
       if (data.errors) {
         throw new Error(data.errors[0].message);
       }
-  
-      const successMessage = this.createChatBotMessage(`Farm created Successfully ${data.data.createUser.id}`, { widget: 'farmRender' });
+
+      
+      const successMessage = this.createChatBotMessage(`Farm created Successfully`, { widget: 'farmRender' });
       console.log(data);
       this.updateChatbotState(successMessage);
   
@@ -76,7 +78,7 @@ class ActionProvider {
         let hasPlant = slot.hasPlant
         let daysTillDone = slot.daysTillDone
         let isWatered = slot.isWatered
-
+        // slot with plants
         if (hasPlant) {
           let slotMessage = `The plant at position (${posX},${posY})`
           if (daysTillDone < 0) {
@@ -91,7 +93,7 @@ class ActionProvider {
           let slotWidthPlantMessage = this.createChatBotMessage(slotMessage)
           this.updateChatbotState(slotWidthPlantMessage)
         }
-
+        // slots beign built
         if (!isBuilt && daysTillDone > 0) {
           let slotMessage = `The slot at position (${posX},${posY}) is being built and currently has ${daysTillDone} days left to be done`
           let constructionSlotMessage = this.createChatBotMessage(slotMessage)
