@@ -1,6 +1,7 @@
 import logging
 import schedule
 import json
+import time
 
 from pymongo import MongoClient, InsertOne
 from bson.errors import InvalidId
@@ -78,6 +79,7 @@ async def root():
 
 @app.post("/harvest/{construction_id}")
 def harvest(construction_id: str, construction: dict):
+    # BIG TODO: redo
     try:
         construction_id = ObjectId(construction_id)
         mongodb_client.service_01.constructions.update_one(
@@ -228,6 +230,7 @@ def plants_create(user: Plants):
 #insertPlants()
 @app.post("/upgradeFarm")
 def upgrade(userId: str) -> User:
+    time.sleep(1)
     newNextTier,newCurrentSize = None,None
     try:
         currentUser= mongodb_client.service_01.users.find_one({"userId": userId})

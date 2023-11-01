@@ -8,6 +8,8 @@ class MessageParser {
     
     if (lowerCaseMessage.includes("hello")) {
       this.actionProvider.greet()
+    } else if (lowerCaseMessage.includes("farm") && lowerCaseMessage.includes("view")) { 
+      this.actionProvider.viewFarm()
     } else if (lowerCaseMessage.includes("create") && lowerCaseMessage.includes("farm")) {
       this.actionProvider.createFarm()
     } else if (lowerCaseMessage.includes("plant")  && lowerCaseMessage.includes("crop"))  {

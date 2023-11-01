@@ -45,10 +45,66 @@ class ActionProvider {
       this.updateChatbotState(failureMessage);
     }
   }
+
+  async viewFarm() {
+    const user = "1232421"
+    let farmResponse = null
+    let farmRetrievedSuccessfuly = false
+    while (farmResponse == null) {
+      [farmRetrievedSuccessfuly, farmResponse] = await this.requestFarmData(user)
+      if (!farmRetrievedSuccessfuly) {
+        return
+      }
+    }
+
+    if (farmRetrievedSuccessfuly) {
+      const successMessage = this.createChatBotMessage("This is your farm stats:", {widget:"farmRender"})
+      this.updateChatbotState(successMessage)
+      // Current size
+      console.log(farmResponse)
+
+      const currentSize = farmResponse["currentSize"]
+      const currentSizeText = `Your current farm size is ${currentSize}x${currentSize}`
+      const currentSizeMessage = this.createChatBotMessage(currentSizeText)
+      this.updateChatbotState(currentSizeMessage)
+      // Farm Slots
+      const constructions = farmResponse["constructions"]
+      for (const slot of constructions) {
+        let posX = slot.posX
+        let posY = slot.posY
+        let isBuilt = slot.isbuilt
+        let hasPlant = slot.hasPlant
+        let daysTillDone = slot.daysTillDone
+        let isWatered = slot.isWatered
+
+        if (hasPlant) {
+          let slotMessage = `The plant at position (${posX},${posY})`
+          if (daysTillDone < 0) {
+            slotMessage = slotMessage + ` has ${daysTillDone} days left to be harvestable`
+
+            const watered = " and has been watered today"
+            const notWatered = " and hasn't been watered today"
+            slotMessage = isWatered ? (slotMessage + watered) : (slotMessage + notWatered)
+          } else if (daysTillDone == 0) {
+            slotMessage = slotMessage + `can be harvested`
+          }
+          let slotWidthPlantMessage = this.createChatBotMessage(slotMessage)
+          this.updateChatbotState(slotWidthPlantMessage)
+        }
+
+        if (!isBuilt && daysTillDone > 0) {
+          let slotMessage = `The slot at position (${posX},${posY}) is being built and currently has ${daysTillDone} days left to be done`
+          let constructionSlotMessage = this.createChatBotMessage(slotMessage)
+          this.updateChatbotState(constructionSlotMessage)
+        }
+      }
+
+    }
+  }
+
   
   async upgradeFarm() {
     let [succesfullFarmUpgrade, currentSize] = await this.requestPlantUpgrade("1232421")
-    console.log(succesfullFarmUpgrade, currentSize)
     if (succesfullFarmUpgrade) {
       const successMessage = this.createChatBotMessage(`Farm upgrade on the way, your new size wil be ${currentSize}x${currentSize}.`)
       this.updateChatbotState(successMessage)
@@ -124,94 +180,137 @@ class ActionProvider {
   }
 
   // Helpers below... Beware...
-// these helpers could be reduced to one function
+  // Note to us: these helpers could be reduced to one function
 
-async requestToPlantCrop(plant, posX, posY) {
-  try {
-    const response = await fetch("http://localhost:5050", {
-      method: "POST",
-      body: JSON.stringify({
-        query: `mutation { plant(userId:"1232421", plantName: "${plant}", posX:${posX}, posY${posY} ) { hasPlant }}`,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+  async requestFarmData(userId) {
+    let sresponse = ""
+    try {
+      const response = await fetch("http://localhost:5050", {
+        method: "POST",
+        body: JSON.stringify({
+          query: `
+            {getUser(id: "${userId}") {
+              currentSize
+              maxSize
+              
+              constructions {
+                hasPlant
+                posX
+                posY
+                daysTillDone
+                isWatered
+                isBuilt
+              }
+            }
+          }`,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-    const data = await response.json();
+      const data = await response.json();
+      sresponse = data.data.getUser
 
-    if (data.errors) {
-      throw new Error(data.errors[0].message);
+      if (data.errors) {
+        throw new Error(data.errors[0].message);
+      }
+
+    } catch (error) {
+      const failureMessage = this.createChatBotMessage(`Theated. Error: ${error.message}`);
+      this.updateChatbotState(failureMessage);
+      return [false, sresponse]
     }
-
-  } catch (error) {
-    const failureMessage = this.createChatBotMessage(`Theated. Error: ${error.message}`);
-    this.updateChatbotState(failureMessage);
-    return false
+    return [true, sresponse]
   }
 
 
-  return true
-}
+  async requestToPlantCrop(plant, posX, posY) {
+    try {
+      const response = await fetch("http://localhost:5050", {
+        method: "POST",
+        body: JSON.stringify({
+          query: `mutation { plant(userId:"1232421", plantName: "${plant}", posX:${posX}, posY${posY} ) { hasPlant }}`,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-async requestPlantHarvest(userId, posX, posY) {
-  try {
-    const response = await fetch("http://localhost:5050", {
-      method: "POST",
-      body: JSON.stringify({
-        query: `mutation { harvest(userId: "${userId}", posX:${posX}, posY:${posY} ) { hasPlant }}`,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+      const data = await response.json();
 
-    const data = await response.json();
+      if (data.errors) {
+        throw new Error(data.errors[0].message);
+      }
 
-    if (data.errors) {
-      throw new Error(data.errors[0].message);
+    } catch (error) {
+      const failureMessage = this.createChatBotMessage(`Theated. Error: ${error.message}`);
+      this.updateChatbotState(failureMessage);
+      return false
     }
 
-  } catch (error) {
-    const failureMessage = this.createChatBotMessage(`Theated. Error: ${error.message}`);
-    this.updateChatbotState(failureMessage);
-    return false
+
+    return true
   }
 
+  async requestPlantHarvest(userId, posX, posY) {
+    try {
+      const response = await fetch("http://localhost:5050", {
+        method: "POST",
+        body: JSON.stringify({
+          query: `mutation { harvest(userId: "${userId}", posX:${posX}, posY:${posY} ) { hasPlant }}`,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-  return true
-}
+      const data = await response.json();
 
-async requestPlantUpgrade(userId=1232421) {
-  let sresponse = ""
-  try {
-    const response = await fetch("http://localhost:5050", {
-      method: "POST",
-      body: JSON.stringify({
-        query: `mutation { upgradeFarm(userId:"${userId}") { currentSize }}`,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+      if (data.errors) {
+        throw new Error(data.errors[0].message);
+      }
 
-    const data = await response.json();
-    sresponse = await data.data.upgradeFarm
-
-    if (data.errors) {
-      throw new Error(data.errors[0].message);
+    } catch (error) {
+      const failureMessage = this.createChatBotMessage(`Theated. Error: ${error.message}`);
+      this.updateChatbotState(failureMessage);
+      return false
     }
 
-  } catch (error) {
-    const failureMessage = this.createChatBotMessage(`Error: ${error.message}`);
-    this.updateChatbotState(failureMessage);
-    return false, sresponse.currentSize
+
+    return true
   }
 
+  async requestPlantUpgrade(userId=1232421) {
+    let sresponse = ""
+    try {
+      const response = await fetch("http://localhost:5050", {
+        method: "POST",
+        body: JSON.stringify({
+          query: `mutation { upgradeFarm(userId:"${userId}") { currentSize }}`,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-  console.log(sresponse)
-  return [ true, sresponse.currentSize]
-}
+      const data = await response.json();
+      sresponse = await data.data.upgradeFarm
+
+      if (data.errors) {
+        throw new Error(data.errors[0].message);
+      }
+
+    } catch (error) {
+      const failureMessage = this.createChatBotMessage(`Error: ${error.message}`);
+      this.updateChatbotState(failureMessage);
+      return false, sresponse.currentSize
+    }
+
+
+    console.log(sresponse)
+    return [ true, sresponse.currentSize]
+  }
 
 
 
