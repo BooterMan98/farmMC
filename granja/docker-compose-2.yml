@@ -1,0 +1,26 @@
+services:
+  granja_service:
+    image: booterman/microservice-farm
+    ports:
+      - "5001:80"
+    links:
+      - granja_service_mongodb
+  granja_service_events_receiver:
+    image: booterman/microservice-farm
+    links:
+      - granja_service_mongodb
+    command: python3 app/events.py
+  granja_service_mongodb:
+    image: mongo:5.0
+    volumes:
+      - granja_service_mongodb_container:/data/db
+    logging:
+        driver: none
+
+volumes:
+  granja_service_mongodb_container:
+
+networks:
+  default:
+    name: microsvcs
+    external: true
