@@ -1,10 +1,8 @@
 services:
   demo_04_api_gateway:
-    build: .
+    image: booterman/microservice-farm-api-gateway
     ports:
       - "5050:80"
-    volumes:
-      - .:/code
 
 networks:
   default:
