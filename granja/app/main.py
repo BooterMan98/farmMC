@@ -135,25 +135,47 @@ async def root():
     return {"Hello": "World"}
 
 
-@app.post("/harvest/{construction_id}")
-def harvest(construction_id: str, construction: dict):
+@app.post("/harvest/")
+def harvest(userId: str,posX:int, posY:int):
     '''
     Harvest plant in a construction.
     returns construction information.
     '''
     try:
-        construction_id = ObjectId(construction_id)
-        mongodb_client.service_01.constructions.update_one(
-            {'_id': construction_id}, {"$set": construction})
+        farm = mongodb_client.service_01.users.find_one({"userId": userId})
+        constructionSlot = farm["constructions"][posX*10+posY]
+        print(constructionSlot)
 
-        emit_events.send(construction_id, "update", construction)
+        if constructionSlot["hasPlant"] and constructionSlot["daysTillDone"] <= 0:
+            plantId = constructionSlot["plantId"]
+            print(constructionSlot["hp"])
 
-        return Constructions(
-            **mongodb_client.service_01.users.find_one({"_id": construction_id})
-        )
+            constructionSlot["hp"] -= 1
+            plantInfo = mongodb_client.service_01.plants.find_one({"id": plantId})
+            print(constructionSlot["hp"])
+            update_data = {
+                "constructions.$.plantId": "" if (constructionSlot["hp"] <= 0) else plantInfo["id"],
+                "constructions.$.hasPlant": 0 if constructionSlot["hp"] <= 0 else 1,
+                "constructions.$.grownDays": 0,
+                "constructions.$.daysTillDone":  0 if constructionSlot["hp"] <= 0 else plantInfo["daysToGrow"],
+                "constructions.$.hp":  0 if constructionSlot["hp"] <= 0 else constructionSlot["hp"]
+            }
+            match_construction = {"posX": posX, "posY": posY}
+            mongodb_client.service_01.users.update_one(
+                {"userId": userId, "constructions": {"$elemMatch": match_construction}},
+                {"$set": update_data}
+            )
+            # emit_events.send("("+ posX + "," + posY + ") updated")
+
+            user = mongodb_client.service_01.users.find_one({"userId": userId})
+            return Constructions(
+                **user["constructions"][posX*10+posY]
+            )
+        else:
+            raise HTTPException(status_code=403, detail="Construction can't be harvested")
 
     except (InvalidId, TypeError):
-        raise HTTPException(status_code=404, detail="Construction not found")
+        raise HTTPException(status_code=404, detail="Construction not found:")
     return
 
 @app.post("/plants")
@@ -197,7 +219,7 @@ async def plant_request(userId: str, plantName: str, posX: int, posY: int):
 
         print("paso4")
     except (InvalidId, TypeError):
-        raise HTTPException(status_code=404, detail="Position not available: "+str(posX*10+posY))
+        raise HTTPException(status_code=403, detail="Position not available: "+str(posX*10+posY))
 
 @app.post("/add_plants")
 def insertPlants():
@@ -381,10 +403,9 @@ def newDay():
     except:
         print("error")
     else:
-        print(userOutput)
         for user in userOutput:
             url = f"http://dummy_service:80/weather/santiago"
-
+            print(user.userId, user.constructions)
 
             isRaining = True#isRaining = requests.get(url).json()
 
@@ -401,10 +422,13 @@ def newDay():
                             construction.isWatered = False
                         if isRaining:
                             construction.isWatered = True
+                        
                             
                     elif not construction.isBuilt and construction.daysTillDone > 0:
                         construction.daysTillDone -= 1
-                        construction.isBuilt = construction.daysTillDone == 0
+                        if construction.daysTillDone == 0:
+                            construction.isBuilt = True
+
                         
                 constructions.append(construction.dict())
 
@@ -413,6 +437,7 @@ def newDay():
             print("$########## Final: ",constructions)
             try:
                 print(user.userId)
+                print (constructions)
                 mongodb_client.service_01.users.update_one({"userId": user.userId}, {"$set": {"constructions": constructions}})
 
                 
