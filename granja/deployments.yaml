@@ -114,6 +114,29 @@ status: {}
 
 ---
 
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yaml
+    kompose.version: 1.31.2 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: granja-service-mongodb
+  name: granja-service-mongodb
+spec:
+  ports:
+    - name: "27017"
+      port: 27017
+      targetPort: 27017
+  selector:
+    io.kompose.service: granja-service-mongodb
+status:
+  loadBalancer: {}
+
+
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -145,6 +168,9 @@ spec:
         - image: mongo:5.0
           name: granja-service-mongodb
           resources: {}
+          ports:
+            - containerPort: 27017
+              protocol: TCP
           volumeMounts:
             - mountPath: /data/db
               name: granja-service-mongodb-container
@@ -280,5 +306,62 @@ spec:
       targetPort: 80
   selector:
     io.kompose.service: demo-04-api-gateway
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yml
+    kompose.version: 1.31.2 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: chatbot-service
+  name: chatbot-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: chatbot-service
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yml
+        kompose.version: 1.31.2 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/microsvcs: "true"
+        io.kompose.service: chatbot-service
+    spec:
+      containers:
+        - image: booterman/chatbot-granja
+          name: chatbot-service
+          ports:
+            - containerPort: 3000
+              hostPort: 80
+              protocol: TCP
+          resources: {}
+      restartPolicy: Always
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yml
+    kompose.version: 1.31.2 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: chatbot-service
+  name: chatbot-service
+spec:
+  ports:
+    - name: "80"
+      port: 80
+      targetPort: 3000
+  selector:
+    io.kompose.service: chatbot-service
 status:
   loadBalancer: {}

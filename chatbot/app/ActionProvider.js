@@ -21,7 +21,7 @@ class ActionProvider {
   async createFarm() {
     try {
 
-      const response = await fetch("http://localhost:5050", {
+      const response = await fetch("https://granja.demo.inf326.nursoft.dev/gateway", {
         method: "POST",
         body: JSON.stringify({
           query: 'mutation { createUser(userId:"1232421") { id }}',
@@ -129,7 +129,8 @@ class ActionProvider {
   
   async listPlants() {
     try {
-      const response = await fetch("http://localhost:5050", {
+      let newData = null
+      const response = await fetch("https://granja.demo.inf326.nursoft.dev/gateway", {
         method: "POST",
         body: JSON.stringify({
           query: '{listPlants {name}}',
@@ -187,7 +188,7 @@ class ActionProvider {
   async requestFarmData(userId) {
     let sresponse = ""
     try {
-      const response = await fetch("http://localhost:5050", {
+      const response = await fetch("https://granja.demo.inf326.nursoft.dev/gateway", {
         method: "POST",
         body: JSON.stringify({
           query: `
@@ -229,7 +230,7 @@ class ActionProvider {
 
   async requestToPlantCrop(plant, posX, posY) {
     try {
-      const response = await fetch("http://localhost:5050", {
+      let hasPlant = null
         method: "POST",
         body: JSON.stringify({
           query: `mutation { plant(userId:"1232421", plantName: "${plant}", posX:${posX}, posY${posY} ) { hasPlant }}`,
@@ -257,7 +258,7 @@ class ActionProvider {
 
   async requestPlantHarvest(userId, posX, posY) {
     try {
-      const response = await fetch("http://localhost:5050", {
+      const response = await fetch("https://granja.demo.inf326.nursoft.dev/gateway", {
         method: "POST",
         body: JSON.stringify({
           query: `mutation { harvest(userId: "${userId}", posX:${posX}, posY:${posY} ) { hasPlant }}`,
@@ -286,7 +287,7 @@ class ActionProvider {
   async requestPlantUpgrade(userId=1232421) {
     let sresponse = ""
     try {
-      const response = await fetch("http://localhost:5050", {
+      const response = await fetch("https://granja.demo.inf326.nursoft.dev/gateway", {
         method: "POST",
         body: JSON.stringify({
           query: `mutation { upgradeFarm(userId:"${userId}") { currentSize }}`,
