@@ -12,7 +12,7 @@ import random
 import os
 
 app = FastAPI()
-mongodb_client = MongoClient("dummy_service_mongodb", 27017)
+mongodb_client = MongoClient("dummy-service-mongodb", 27017)
 
 
 logging.basicConfig(level=logging.INFO,
