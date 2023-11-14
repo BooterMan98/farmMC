@@ -15,7 +15,7 @@ from pymongo.errors import PyMongoError
 from .events import Emit
 
 app = FastAPI()
-mongodb_client = MongoClient("granja_service_mongodb", 27017)
+mongodb_client = MongoClient("granja-service-mongodb", 27017)
 
 emit_events = Emit()
 
@@ -335,11 +335,11 @@ def upgrade(userId: str) -> User:
         raise HTTPException(status_code=403, detail="Maximum upgrades reached")
 
     try:
-        url = f"http://dummy_service:80/checkConstructionViable?tier={nextTier}&userId={userId}"
+        url = f"http://dummy-service:80/checkConstructionViable?tier={nextTier}&userId={userId}"
 
         isUpgradeViable = True #requests.get(url).json()
         if isUpgradeViable:
-            url = f"http://dummy_service:80/buyConstruction?tier={nextTier}&userId={userId}"
+            url = f"http://dummy-service:80/buyConstruction?tier={nextTier}&userId={userId}"
             purchaseSuccesfull = True #requests.get(url).json()
             if purchaseSuccesfull:
                 
@@ -383,7 +383,7 @@ def newDay():
     else:
         print(userOutput)
         for user in userOutput:
-            url = f"http://dummy_service:80/weather/santiago"
+            url = f"http://dummy-service:80/weather/santiago"
 
 
             isRaining = True#isRaining = requests.get(url).json()
