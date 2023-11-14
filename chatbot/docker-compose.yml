@@ -1,0 +1,10 @@
+services:
+  chatbot-service:
+    image: booterman/chatbot-granja
+    ports:
+      - "80:3000"
+
+networks:
+  default:
+    name: microsvcs
+    external: true

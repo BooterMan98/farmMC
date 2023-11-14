@@ -95,6 +95,7 @@ class ActionProvider {
         }
         // slots beign built
         if (!isBuilt && daysTillDone > 0) {
+          console.log(posX, posY)
           let slotMessage = `The slot at position (${posX},${posY}) is being built and currently has ${daysTillDone} days left to be done`
           let constructionSlotMessage = this.createChatBotMessage(slotMessage)
           this.updateChatbotState(constructionSlotMessage)
@@ -129,6 +130,9 @@ class ActionProvider {
   
   async listPlants() {
     try {
+      let newData = null
+      let counter = 0
+      while (newData == null) {
       const response = await fetch("http://localhost:5050", {
         method: "POST",
         body: JSON.stringify({
@@ -145,10 +149,12 @@ class ActionProvider {
         throw new Error(data.errors[0].message);
       }
 
-      let newData = data.listPlants
-      if (newData == undefined) {
-        newData = []
-      } 
+      newData = data.listPlants
+      if (counter > 5) {
+        newData = ["empty"]
+      }
+      counter++
+      }
 
       const successMessage = this.createChatBotMessage(`Here is the plant list`, {widget: "plantList", payload: {newData}})
       this.updateChatbotState(successMessage)
@@ -230,16 +236,29 @@ class ActionProvider {
   async requestToPlantCrop(plant, posX, posY) {
     try {
       const response = await fetch("http://localhost:5050", {
+      let hasPlant = null
+      while (hasPlant == null) {
+        setTimeout(1)
         method: "POST",
         body: JSON.stringify({
-          query: `mutation { plant(userId:"1232421", plantName: "${plant}", posX:${posX}, posY${posY} ) { hasPlant }}`,
+          query: `mutation {
+            plant(userId:"1232421", plantName: "${plant}", posX: "${posX}", posY: "${posY}") {
+              hasPlant
+            }
+          }`,
         }),
         headers: {
           "Content-Type": "application/json",
         },
       });
 
-      const data = await response.json();
+      let data = await response.json();
+      console.log(data)
+      if (data.data != null) {
+        hasPlant = data.data.plant.hasPlant
+      }
+      console.log(`hasplant: ${hasPlant}`)
+    }
 
       if (data.errors) {
         throw new Error(data.errors[0].message);
