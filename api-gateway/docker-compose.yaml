@@ -1,5 +1,5 @@
 services:
-  demo_04_api_gateway:
+  demo-04-api-gateway:
     build: .
     ports:
       - "5050:80"
