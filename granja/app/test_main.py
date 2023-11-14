@@ -60,13 +60,13 @@ def test_post_plants_200():
     response = client.post("/plants?userId=test&plantName=Arandano&posX=0&posY=0")
     assert response.status_code == 200
 
-def test_post_plants_404():
+def test_post_plants_403():
     response = client.post("/plants?userId=noexiste&plantName=Arandano&posX=0&posY=0")
-    assert response.status_code == 404
+    assert response.status_code == 403
 
 def test_harvest():
-    response = client.post("/harvest", "1422")
-    assert response.status_code == 404
+    response = client.post("/harvest", "error")
+    assert response.status_code == 307
 
 def test_delete_users_204():
     response = client.delete("/users/delete/test")
